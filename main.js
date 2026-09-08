@@ -1,11 +1,19 @@
-import './style.css';
-import { Encoder, Profile } from '@garmin/fitsdk';
+import "./style.css";
+import { Encoder, Profile } from "@garmin/fitsdk";
 
 const uid = () => crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
 
-const step = (name, intensity, durationType, durationValue, targetType = 'open', targetLow = '', targetHigh = '') => ({
+const step = (
+  name,
+  intensity,
+  durationType,
+  durationValue,
+  targetType = "open",
+  targetLow = "",
+  targetHigh = "",
+) => ({
   id: uid(),
-  kind: 'step',
+  kind: "step",
   name,
   intensity,
   durationType,
@@ -17,248 +25,300 @@ const step = (name, intensity, durationType, durationValue, targetType = 'open',
 
 const repeat = (previousSteps, reps) => ({
   id: uid(),
-  kind: 'repeat',
-  name: 'Repeat',
+  kind: "repeat",
+  name: "Repeat",
   previousSteps,
   reps,
 });
 
 const initialSteps = [
-  step('Warm up', 'warmup', 'distance', 2000),
-  step('Tempo', 'active', 'distance', 1000, 'pace', '4:35', '4:45'),
-  step('Easy', 'recovery', 'time', 120),
+  step("Warm up", "warmup", "distance", 2000),
+  step("Tempo", "active", "distance", 1000, "pace", "4:35", "4:45"),
+  step("Easy", "recovery", "time", 120),
   repeat(2, 4),
-  step('Cool down', 'cooldown', 'distance', 1500),
+  step("Cool down", "cooldown", "distance", 1500),
 ];
 
 const trainingPlan = [
   {
-    id: 'gsr-2026-09-10-club',
-    date: '2026-09-10',
-    type: 'Club',
-    title: 'Thursday club run',
-    description: '8–10 km steady with the club. Keep it controlled.',
+    id: "gsr-2026-09-10-club",
+    date: "2026-09-10",
+    type: "Club",
+    title: "Thursday club run",
+    description: "8–10 km steady with the club. Keep it controlled.",
     sync: false,
-    steps: [step('Club run', 'active', 'distance', 9000)],
+    steps: [step("Club run", "active", "distance", 9000)],
   },
   {
-    id: 'gsr-2026-09-14-club',
-    date: '2026-09-14',
-    type: 'Club',
-    title: 'Monday club run',
-    description: 'Around 10 km at normal club pace.',
+    id: "gsr-2026-09-14-club",
+    date: "2026-09-14",
+    type: "Club",
+    title: "Monday club run",
+    description: "Around 10 km at normal club pace.",
     sync: false,
-    steps: [step('Club run', 'active', 'distance', 10000)],
+    steps: [step("Club run", "active", "distance", 10000)],
   },
   {
-    id: 'gsr-2026-09-17-club',
-    date: '2026-09-17',
-    type: 'Club',
-    title: 'Thursday club run',
-    description: '8–10 km steady. Keep enough in reserve for Saturday.',
+    id: "gsr-2026-09-17-club",
+    date: "2026-09-17",
+    type: "Club",
+    title: "Thursday club run",
+    description: "8–10 km steady. Keep enough in reserve for Saturday.",
     sync: false,
-    steps: [step('Club run', 'active', 'distance', 9000)],
+    steps: [step("Club run", "active", "distance", 9000)],
   },
   {
-    id: 'gsr-2026-09-19-progression',
-    date: '2026-09-19',
-    type: 'Structured',
-    title: '13 km progression',
-    description: '3 km easy, 6 km steady at 5:00–5:15/km, 2 km at 4:35–4:45/km, then 2 km easy.',
+    id: "gsr-2026-09-19-progression",
+    date: "2026-09-19",
+    type: "Structured",
+    title: "13 km progression",
+    description:
+      "3 km easy, 6 km steady at 5:00–5:15/km, 2 km at 4:35–4:45/km, then 2 km easy.",
     sync: true,
     steps: [
-      step('Easy start', 'warmup', 'distance', 3000),
-      step('Steady', 'active', 'distance', 6000, 'pace', '5:00', '5:15'),
-      step('10-mile effort', 'active', 'distance', 2000, 'pace', '4:35', '4:45'),
-      step('Easy finish', 'cooldown', 'distance', 2000),
+      step("Easy start", "warmup", "distance", 3000),
+      step("Steady", "active", "distance", 6000, "pace", "5:00", "5:15"),
+      step(
+        "10-mile effort",
+        "active",
+        "distance",
+        2000,
+        "pace",
+        "4:35",
+        "4:45",
+      ),
+      step("Easy finish", "cooldown", "distance", 2000),
     ],
   },
 
   {
-    id: 'gsr-2026-09-21-club',
-    date: '2026-09-21',
-    type: 'Club',
-    title: 'Monday club run',
-    description: 'Around 10 km steady with the club.',
+    id: "gsr-2026-09-21-club",
+    date: "2026-09-21",
+    type: "Club",
+    title: "Monday club run",
+    description: "Around 10 km steady with the club.",
     sync: false,
-    steps: [step('Club run', 'active', 'distance', 10000)],
+    steps: [step("Club run", "active", "distance", 10000)],
   },
   {
-    id: 'gsr-2026-09-24-club',
-    date: '2026-09-24',
-    type: 'Club',
-    title: 'Thursday club run',
-    description: '8–10 km controlled ahead of Saturday.',
+    id: "gsr-2026-09-24-club",
+    date: "2026-09-24",
+    type: "Club",
+    title: "Thursday club run",
+    description: "8–10 km controlled ahead of Saturday.",
     sync: false,
-    steps: [step('Club run', 'active', 'distance', 9000)],
+    steps: [step("Club run", "active", "distance", 9000)],
   },
   {
-    id: 'gsr-2026-09-26-2k-reps',
-    date: '2026-09-26',
-    type: 'Structured',
-    title: '3 × 2 km',
-    description: '2 km warm-up, 3 × 2 km at 4:30–4:40/km with 3 min recovery, then 2 km cool-down.',
+    id: "gsr-2026-09-26-2k-reps",
+    date: "2026-09-26",
+    type: "Structured",
+    title: "3 × 2 km",
+    description:
+      "2 km warm-up, 3 × 2 km at 4:30–4:40/km with 3 min recovery, then 2 km cool-down.",
     sync: true,
     steps: [
-      step('Warm up', 'warmup', 'distance', 2000),
-      step('2 km rep', 'active', 'distance', 2000, 'pace', '4:30', '4:40'),
-      step('Recovery', 'recovery', 'time', 180),
+      step("Warm up", "warmup", "distance", 2000),
+      step("2 km rep", "active", "distance", 2000, "pace", "4:30", "4:40"),
+      step("Recovery", "recovery", "time", 180),
       repeat(2, 3),
-      step('Cool down', 'cooldown', 'distance', 2000),
+      step("Cool down", "cooldown", "distance", 2000),
     ],
   },
 
   {
-    id: 'gsr-2026-09-28-club',
-    date: '2026-09-28',
-    type: 'Club',
-    title: 'Monday club run',
-    description: 'Around 10 km steady.',
+    id: "gsr-2026-09-28-club",
+    date: "2026-09-28",
+    type: "Club",
+    title: "Monday club run",
+    description: "Around 10 km steady.",
     sync: false,
-    steps: [step('Club run', 'active', 'distance', 10000)],
+    steps: [step("Club run", "active", "distance", 10000)],
   },
   {
-    id: 'gsr-2026-10-01-club',
-    date: '2026-10-01',
-    type: 'Club',
-    title: 'Thursday club run',
-    description: '8–10 km controlled. Avoid a hard finish.',
+    id: "gsr-2026-10-01-club",
+    date: "2026-10-01",
+    type: "Club",
+    title: "Thursday club run",
+    description: "8–10 km controlled. Avoid a hard finish.",
     sync: false,
-    steps: [step('Club run', 'active', 'distance', 9000)],
+    steps: [step("Club run", "active", "distance", 9000)],
   },
   {
-    id: 'gsr-2026-10-03-long',
-    date: '2026-10-03',
-    type: 'Structured',
-    title: '15 km long run',
-    description: '11 km relaxed followed by 4 km at 4:45–4:55/km. Final substantial long run.',
+    id: "gsr-2026-10-03-long",
+    date: "2026-10-03",
+    type: "Structured",
+    title: "15 km long run",
+    description:
+      "11 km relaxed followed by 4 km at 4:45–4:55/km. Final substantial long run.",
     sync: true,
     steps: [
-      step('Easy start', 'warmup', 'distance', 2000),
-      step('Easy aerobic', 'active', 'distance', 9000),
-      step('Strong finish', 'active', 'distance', 4000, 'pace', '4:45', '4:55'),
+      step("Easy start", "warmup", "distance", 2000),
+      step("Easy aerobic", "active", "distance", 9000),
+      step("Strong finish", "active", "distance", 4000, "pace", "4:45", "4:55"),
     ],
   },
 
   {
-    id: 'gsr-2026-10-05-club',
-    date: '2026-10-05',
-    type: 'Club',
-    title: 'Monday club run',
-    description: '8–10 km easy to steady. Taper starts here.',
+    id: "gsr-2026-10-05-club",
+    date: "2026-10-05",
+    type: "Club",
+    title: "Monday club run",
+    description: "8–10 km easy to steady. Taper starts here.",
     sync: false,
-    steps: [step('Club run', 'active', 'distance', 9000)],
+    steps: [step("Club run", "active", "distance", 9000)],
   },
   {
-    id: 'gsr-2026-10-08-club',
-    date: '2026-10-08',
-    type: 'Club',
-    title: 'Thursday club run',
-    description: 'About 8 km, deliberately comfortable.',
+    id: "gsr-2026-10-08-club",
+    date: "2026-10-08",
+    type: "Club",
+    title: "Thursday club run",
+    description: "About 8 km, deliberately comfortable.",
     sync: false,
-    steps: [step('Easy club run', 'active', 'distance', 8000)],
+    steps: [step("Easy club run", "active", "distance", 8000)],
   },
   {
-    id: 'gsr-2026-10-10-800s',
-    date: '2026-10-10',
-    type: 'Structured',
-    title: '6 × 800 m taper session',
-    description: '2 km warm-up, 6 × 800 m at 4:20–4:30/km with 90 sec easy recovery, then 2 km cool-down.',
+    id: "gsr-2026-10-10-800s",
+    date: "2026-10-10",
+    type: "Structured",
+    title: "6 × 800 m taper session",
+    description:
+      "2 km warm-up, 6 × 800 m at 4:20–4:30/km with 90 sec easy recovery, then 2 km cool-down.",
     sync: true,
     steps: [
-      step('Warm up', 'warmup', 'distance', 2000),
-      step('800 m rep', 'active', 'distance', 800, 'pace', '4:20', '4:30'),
-      step('Recovery', 'recovery', 'time', 90),
+      step("Warm up", "warmup", "distance", 2000),
+      step("800 m rep", "active", "distance", 800, "pace", "4:20", "4:30"),
+      step("Recovery", "recovery", "time", 90),
       repeat(2, 6),
-      step('Cool down', 'cooldown', 'distance', 2000),
+      step("Cool down", "cooldown", "distance", 2000),
     ],
   },
 
   {
-    id: 'gsr-2026-10-12-club',
-    date: '2026-10-12',
-    type: 'Club',
-    title: 'Monday easy club run',
-    description: '6–8 km easy. Finish feeling fresh.',
+    id: "gsr-2026-10-12-club",
+    date: "2026-10-12",
+    type: "Club",
+    title: "Monday easy club run",
+    description: "6–8 km easy. Finish feeling fresh.",
     sync: false,
-    steps: [step('Easy run', 'active', 'distance', 7000)],
+    steps: [step("Easy run", "active", "distance", 7000)],
   },
   {
-    id: 'gsr-2026-10-15-club',
-    date: '2026-10-15',
-    type: 'Club',
-    title: 'Thursday easy club run',
-    description: 'Keep this very easy. Around 5–7 km is plenty.',
+    id: "gsr-2026-10-15-club",
+    date: "2026-10-15",
+    type: "Club",
+    title: "Thursday easy club run",
+    description: "Keep this very easy. Around 5–7 km is plenty.",
     sync: false,
-    steps: [step('Easy run', 'active', 'distance', 6000)],
+    steps: [step("Easy run", "active", "distance", 6000)],
   },
   {
-    id: 'gsr-2026-10-17-tune',
-    date: '2026-10-17',
-    type: 'Structured',
-    title: 'Race tune-up',
-    description: 'Very short easy run with 4 × 20 sec relaxed strides. This is just to loosen the legs.',
+    id: "gsr-2026-10-17-tune",
+    date: "2026-10-17",
+    type: "Structured",
+    title: "Race tune-up",
+    description:
+      "Very short easy run with 4 × 20 sec relaxed strides. This is just to loosen the legs.",
     sync: true,
     steps: [
-      step('Easy run', 'warmup', 'distance', 3000),
-      step('Stride', 'active', 'time', 20),
-      step('Easy', 'recovery', 'time', 60),
+      step("Easy run", "warmup", "distance", 3000),
+      step("Stride", "active", "time", 20),
+      step("Easy", "recovery", "time", 60),
       repeat(2, 4),
-      step('Easy finish', 'cooldown', 'distance', 1000),
+      step("Easy finish", "cooldown", "distance", 1000),
     ],
   },
 
   {
-    id: 'gsr-2026-10-18-race',
-    date: '2026-10-18',
-    type: 'Race',
-    title: 'Great South Run',
-    description: 'Race day: 10 miles / 16.1 km.',
+    id: "gsr-2026-10-18-race",
+    date: "2026-10-18",
+    type: "Race",
+    title: "Great South Run",
+    description: "Race day: 10 miles / 16.1 km.",
     sync: false,
     race: true,
     steps: [],
   },
 ];
 
+// Number every training session in plan order, including club runs; exclude race day.
+function planName(item) {
+  const day =
+    trainingPlan
+      .filter((session) => !session.race)
+      .findIndex((session) => session.id === item.id) + 1;
+  return item.race
+    ? "Great South Run - Race Day"
+    : `Great South Run - Training Day ${day} - ${item.title}`;
+}
+
 const seededSync = {};
+let syncBusy = false;
+
+function setSyncBusy(busy) {
+  syncBusy = busy;
+  document.querySelectorAll("button, input, select").forEach((el) => {
+    if (busy) el.disabled = true;
+  });
+}
+
+function rememberWorkout(item, result, payload) {
+  const map = loadSyncMap();
+  const previous = map[item.id];
+  map[item.id] = {
+    workoutId: result.workoutId,
+    workoutName: result.workoutName || payload.name,
+    scheduledDate: result.updated
+      ? previous?.scheduledDate || null
+      : result.scheduledDate,
+    steps: payload.steps,
+    warning:
+      result.warning || (result.updated ? previous?.warning : null) || null,
+  };
+  saveSyncMap(map);
+  if (state.editingPlanId === item.id) {
+    state.editingWorkoutId = result.workoutId;
+    state.scheduleDate = map[item.id].scheduledDate || "";
+  }
+}
 
 const state = {
-  name: 'Great South Run Session',
-  sport: 'running',
+  name: "Great South Run Session",
+  sport: "running",
   steps: structuredClone(initialSteps),
-  scheduleDate: '',
+  scheduleDate: "",
   pushToWatch: true,
   editingPlanId: null,
   editingWorkoutId: null,
 };
 
-function escapeHtml(value = '') {
+function escapeHtml(value = "") {
   return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function cloneSteps(steps) {
-  return structuredClone(steps).map(s => ({ ...s, id: uid() }));
+  return structuredClone(steps).map((s) => ({ ...s, id: uid() }));
 }
 
 function localDateISO() {
   const d = new Date();
   const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 
 function formatDate(value) {
-  const [y, m, d] = value.split('-').map(Number);
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
+  const [y, m, d] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
   }).format(new Date(y, m - 1, d));
 }
 
@@ -266,7 +326,7 @@ function loadSyncMap() {
   let saved = {};
 
   try {
-    saved = JSON.parse(localStorage.getItem('garminPlanSyncV1') || '{}') || {};
+    saved = JSON.parse(localStorage.getItem("garminPlanSyncV1") || "{}") || {};
   } catch {
     saved = {};
   }
@@ -281,34 +341,36 @@ function loadSyncMap() {
   }
 
   if (changed) {
-    localStorage.setItem('garminPlanSyncV1', JSON.stringify(saved));
+    localStorage.setItem("garminPlanSyncV1", JSON.stringify(saved));
   }
 
   return saved;
 }
 
 function saveSyncMap(map) {
-  localStorage.setItem('garminPlanSyncV1', JSON.stringify(map));
+  localStorage.setItem("garminPlanSyncV1", JSON.stringify(map));
 }
 
 function getBuilderKey() {
-  let builderKey = localStorage.getItem('garminBuilderKey') || '';
+  let builderKey = localStorage.getItem("garminBuilderKey") || "";
 
   if (!builderKey) {
     builderKey = window.prompt(
-      'Enter your Garmin Workout Builder key. This is the GARMIN_BUILDER_KEY you set in Vercel.'
+      "Enter your Garmin Workout Builder key. This is the GARMIN_BUILDER_KEY you set in Vercel.",
     );
 
-    if (!builderKey) return '';
+    if (!builderKey) return "";
 
-    localStorage.setItem('garminBuilderKey', builderKey);
+    localStorage.setItem("garminBuilderKey", builderKey);
   }
 
   return builderKey;
 }
 
 function parsePace(value) {
-  const match = String(value).trim().match(/^(\d{1,2}):(\d{2})$/);
+  const match = String(value)
+    .trim()
+    .match(/^(\d{1,2}):(\d{2})$/);
 
   if (!match) return null;
 
@@ -326,9 +388,9 @@ function paceToSpeed(pace) {
 }
 
 function formatDuration(s) {
-  if (s.durationType === 'open') return 'Lap button';
+  if (s.durationType === "open") return "Lap button";
 
-  if (s.durationType === 'distance') {
+  if (s.durationType === "distance") {
     return s.durationValue >= 1000
       ? `${(s.durationValue / 1000).toFixed(s.durationValue % 1000 ? 1 : 0)} km`
       : `${s.durationValue} m`;
@@ -337,23 +399,23 @@ function formatDuration(s) {
   const mins = Math.floor(s.durationValue / 60);
   const secs = s.durationValue % 60;
 
-  return mins ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
+  return mins ? `${mins}:${String(secs).padStart(2, "0")}` : `${secs}s`;
 }
 
 function formatTarget(s) {
-  if (s.targetType === 'pace') {
-    return `${s.targetLow || '?'} to ${s.targetHigh || '?'} /km`;
+  if (s.targetType === "pace") {
+    return `${s.targetLow || "?"} to ${s.targetHigh || "?"} /km`;
   }
 
-  if (s.targetType === 'heartRate') {
-    return `${s.targetLow || '?'} to ${s.targetHigh || '?'} bpm`;
+  if (s.targetType === "heartRate") {
+    return `${s.targetLow || "?"} to ${s.targetHigh || "?"} bpm`;
   }
 
-  return 'No target';
+  return "No target";
 }
 
 function stepCard(s, index) {
-  if (s.kind === 'repeat') {
+  if (s.kind === "repeat") {
     return `
       <article class="step-card repeat-card" data-id="${s.id}">
         <div class="step-number">${index + 1}</div>
@@ -410,39 +472,42 @@ function stepCard(s, index) {
         <label>
           Intensity
           <select data-field="intensity">
-            ${['warmup', 'active', 'recovery', 'rest', 'cooldown']
-              .map(v => `
+            ${["warmup", "active", "recovery", "rest", "cooldown"]
+              .map(
+                (v) => `
                 <option
                   value="${v}"
-                  ${s.intensity === v ? 'selected' : ''}
+                  ${s.intensity === v ? "selected" : ""}
                 >
                   ${v[0].toUpperCase() + v.slice(1)}
                 </option>
-              `)
-              .join('')}
+              `,
+              )
+              .join("")}
           </select>
         </label>
 
         <label>
           Duration
           <select data-field="durationType">
-            <option value="distance" ${s.durationType === 'distance' ? 'selected' : ''}>
+            <option value="distance" ${s.durationType === "distance" ? "selected" : ""}>
               Distance
             </option>
-            <option value="time" ${s.durationType === 'time' ? 'selected' : ''}>
+            <option value="time" ${s.durationType === "time" ? "selected" : ""}>
               Time
             </option>
-            <option value="open" ${s.durationType === 'open' ? 'selected' : ''}>
+            <option value="open" ${s.durationType === "open" ? "selected" : ""}>
               Until lap press
             </option>
           </select>
         </label>
 
-        ${s.durationType === 'open'
-          ? ''
-          : `
+        ${
+          s.durationType === "open"
+            ? ""
+            : `
             <label>
-              ${s.durationType === 'distance' ? 'Metres' : 'Seconds'}
+              ${s.durationType === "distance" ? "Metres" : "Seconds"}
               <input
                 data-field="durationValue"
                 type="number"
@@ -457,20 +522,21 @@ function stepCard(s, index) {
         <label>
           Target
           <select data-field="targetType">
-            <option value="open" ${s.targetType === 'open' ? 'selected' : ''}>
+            <option value="open" ${s.targetType === "open" ? "selected" : ""}>
               No target
             </option>
-            <option value="pace" ${s.targetType === 'pace' ? 'selected' : ''}>
+            <option value="pace" ${s.targetType === "pace" ? "selected" : ""}>
               Pace
             </option>
-            <option value="heartRate" ${s.targetType === 'heartRate' ? 'selected' : ''}>
+            <option value="heartRate" ${s.targetType === "heartRate" ? "selected" : ""}>
               Heart rate
             </option>
           </select>
         </label>
 
-        ${s.targetType === 'pace'
-          ? `
+        ${
+          s.targetType === "pace"
+            ? `
             <label>
               Fast pace
               <input
@@ -493,11 +559,12 @@ function stepCard(s, index) {
               >
             </label>
           `
-          : ''
+            : ""
         }
 
-        ${s.targetType === 'heartRate'
-          ? `
+        ${
+          s.targetType === "heartRate"
+            ? `
             <label>
               HR low
               <input
@@ -520,7 +587,7 @@ function stepCard(s, index) {
               >
             </label>
           `
-          : ''
+            : ""
         }
       </div>
 
@@ -528,14 +595,14 @@ function stepCard(s, index) {
         <button
           class="icon-btn"
           data-action="up"
-          ${index === 0 ? 'disabled' : ''}
+          ${index === 0 ? "disabled" : ""}
           aria-label="Move up"
         >↑</button>
 
         <button
           class="icon-btn"
           data-action="down"
-          ${index === state.steps.length - 1 ? 'disabled' : ''}
+          ${index === state.steps.length - 1 ? "disabled" : ""}
           aria-label="Move down"
         >↓</button>
 
@@ -552,7 +619,7 @@ function stepCard(s, index) {
 function summaryRows() {
   return state.steps
     .map((s, index) => {
-      if (s.kind === 'repeat') {
+      if (s.kind === "repeat") {
         return `
           <div class="summary-row">
             <span>${index + 1}</span>
@@ -565,12 +632,12 @@ function summaryRows() {
       return `
         <div class="summary-row">
           <span>${index + 1}</span>
-          <strong>${escapeHtml(s.name || 'Step')}</strong>
+          <strong>${escapeHtml(s.name || "Step")}</strong>
           <span>${formatDuration(s)} · ${formatTarget(s)}</span>
         </div>
       `;
     })
-    .join('');
+    .join("");
 }
 
 function planRows() {
@@ -578,30 +645,30 @@ function planRows() {
   const today = localDateISO();
 
   return trainingPlan
-    .map(item => {
+    .map((item) => {
       const synced = syncMap[item.id];
       const past = item.date < today;
 
       let badge = item.type;
 
-      if (synced) badge = '✓ Garmin';
-      else if (item.race) badge = 'Race';
-      else if (past) badge = 'Past';
+      if (synced) badge = "✓ Garmin";
+      else if (item.race) badge = "Race";
+      else if (past) badge = "Past";
 
       const syncButton = item.sync
         ? `
           <button
             class="secondary plan-sync-one"
             data-plan-id="${item.id}"
-            ${synced ? 'disabled' : ''}
+            ${synced ? "disabled" : ""}
           >
-            ${synced ? 'Synced' : 'Sync to Garmin'}
+            ${synced ? "Synced" : "Sync to Garmin"}
           </button>
         `
-        : '';
+        : "";
 
       const loadButton = item.race
-        ? ''
+        ? ""
         : `
           <button
             class="ghost plan-load"
@@ -615,20 +682,21 @@ function planRows() {
         ? `
           <div class="plan-sync-detail">
             Garmin ID ${escapeHtml(synced.workoutId)}
-            ${synced.scheduledDate ? ` · ${escapeHtml(synced.scheduledDate)}` : ''}
+            ${synced.scheduledDate ? ` · ${escapeHtml(synced.scheduledDate)}` : ""}
+            ${synced.warning ? ` · ${escapeHtml(synced.warning)}` : ""}
           </div>
         `
-        : '';
+        : "";
 
       return `
-        <article class="plan-row ${item.type.toLowerCase()} ${past ? 'past' : ''}">
+        <article class="plan-row ${item.type.toLowerCase()} ${past ? "past" : ""}">
           <div class="plan-date">
             ${escapeHtml(formatDate(item.date))}
           </div>
 
           <div class="plan-main">
             <div class="plan-title-line">
-              <strong>${escapeHtml(item.title)}</strong>
+              <strong>${escapeHtml(planName(item))}</strong>
               <span class="plan-badge">${escapeHtml(badge)}</span>
             </div>
 
@@ -646,11 +714,11 @@ function planRows() {
         </article>
       `;
     })
-    .join('');
+    .join("");
 }
 
 function render() {
-  document.querySelector('#app').innerHTML = `
+  document.querySelector("#app").innerHTML = `
     <style>
       .plan-panel {
         margin: 24px auto;
@@ -813,7 +881,7 @@ function render() {
             <input
               id="workout-name"
               type="text"
-              maxlength="32"
+              maxlength="80"
               value="${escapeHtml(state.name)}"
             >
           </label>
@@ -827,7 +895,7 @@ function render() {
         </div>
 
         <div class="steps" id="steps">
-          ${state.steps.map(stepCard).join('')}
+          ${state.steps.map(stepCard).join("")}
         </div>
 
         <div class="add-row">
@@ -859,14 +927,16 @@ function render() {
                 id="schedule-date"
                 type="date"
                 value="${escapeHtml(state.scheduleDate)}"
+                ${state.editingWorkoutId ? "disabled" : ""}
               >
             </label>
 
+            ${state.editingWorkoutId ? '<p class="hint">Updating preserves the existing Garmin calendar entries. Change dates in Garmin Connect.</p>' : ""}
             <label class="check-row">
               <input
                 id="push-to-watch"
                 type="checkbox"
-                ${state.pushToWatch ? 'checked' : ''}
+                ${state.pushToWatch ? "checked" : ""}
               >
 
               <span>Push to my Garmin watch now</span>
@@ -883,11 +953,11 @@ function render() {
             class="primary"
             id="send-garmin"
           >
-            ${state.editingWorkoutId
-              ? 'Update Garmin Workout'
-              : 'Send to Garmin Connect'}
-          </button>
-            Send to Garmin Connect
+            ${
+              state.editingWorkoutId
+                ? "Update Garmin Workout"
+                : "Send to Garmin Connect"
+            }
           </button>
 
           <button
@@ -920,14 +990,15 @@ function render() {
   `;
 
   bindEvents();
+  if (syncBusy) setSyncBusy(true);
 }
 
 function updateStep(id, field, value) {
-  const s = state.steps.find(x => x.id === id);
+  const s = state.steps.find((x) => x.id === id);
 
   if (!s) return;
 
-  if (['durationValue', 'previousSteps', 'reps'].includes(field)) {
+  if (["durationValue", "previousSteps", "reps"].includes(field)) {
     value = Number(value);
   }
 
@@ -938,10 +1009,11 @@ function loadPlanWorkout(item) {
   const syncMap = loadSyncMap();
   const synced = syncMap[item.id];
 
-  state.name = item.title.slice(0, 32);
-  state.sport = 'running';
-  state.steps = cloneSteps(item.steps);
-  state.scheduleDate = item.date;
+  state.name =
+    synced?.steps && synced.workoutName ? synced.workoutName : planName(item);
+  state.sport = "running";
+  state.steps = cloneSteps(synced?.steps || item.steps);
+  state.scheduleDate = synced ? synced.scheduledDate || "" : item.date;
   state.pushToWatch = item.date === localDateISO();
 
   state.editingPlanId = item.id;
@@ -950,23 +1022,23 @@ function loadPlanWorkout(item) {
   render();
 
   setTimeout(() => {
-    document.querySelector('.builder')?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
+    document.querySelector(".builder")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
     });
   }, 0);
 }
 
 function bindEvents() {
-  document.querySelector('#workout-name').addEventListener('input', e => {
+  document.querySelector("#workout-name").addEventListener("input", (e) => {
     state.name = e.target.value;
 
-    document.querySelector('.summary-panel h2').textContent =
-      state.name || 'Untitled workout';
+    document.querySelector(".summary-panel h2").textContent =
+      state.name || "Untitled workout";
   });
 
-  document.querySelector('#steps').addEventListener('change', e => {
-    const card = e.target.closest('[data-id]');
+  document.querySelector("#steps").addEventListener("change", (e) => {
+    const card = e.target.closest("[data-id]");
     const field = e.target.dataset.field;
 
     if (!card || !field) return;
@@ -975,8 +1047,8 @@ function bindEvents() {
     render();
   });
 
-  document.querySelector('#steps').addEventListener('input', e => {
-    const card = e.target.closest('[data-id]');
+  document.querySelector("#steps").addEventListener("input", (e) => {
+    const card = e.target.closest("[data-id]");
     const field = e.target.dataset.field;
 
     if (!card || !field) return;
@@ -984,86 +1056,81 @@ function bindEvents() {
     updateStep(card.dataset.id, field, e.target.value);
   });
 
-  document.querySelector('#steps').addEventListener('click', e => {
-    const button = e.target.closest('[data-action]');
-    const card = e.target.closest('[data-id]');
+  document.querySelector("#steps").addEventListener("click", (e) => {
+    const button = e.target.closest("[data-action]");
+    const card = e.target.closest("[data-id]");
 
     if (!button || !card) return;
 
-    const index = state.steps.findIndex(s => s.id === card.dataset.id);
+    const index = state.steps.findIndex((s) => s.id === card.dataset.id);
 
-    if (button.dataset.action === 'delete') {
+    if (button.dataset.action === "delete") {
       state.steps.splice(index, 1);
     }
 
-    if (button.dataset.action === 'up' && index > 0) {
-      [state.steps[index - 1], state.steps[index]] =
-        [state.steps[index], state.steps[index - 1]];
+    if (button.dataset.action === "up" && index > 0) {
+      [state.steps[index - 1], state.steps[index]] = [
+        state.steps[index],
+        state.steps[index - 1],
+      ];
     }
 
-    if (
-      button.dataset.action === 'down' &&
-      index < state.steps.length - 1
-    ) {
-      [state.steps[index + 1], state.steps[index]] =
-        [state.steps[index], state.steps[index + 1]];
+    if (button.dataset.action === "down" && index < state.steps.length - 1) {
+      [state.steps[index + 1], state.steps[index]] = [
+        state.steps[index],
+        state.steps[index + 1],
+      ];
     }
 
     render();
   });
 
-  document.querySelector('#add-step').addEventListener('click', () => {
-    state.steps.push(
-      step('Run', 'active', 'distance', 1000)
-    );
+  document.querySelector("#add-step").addEventListener("click", () => {
+    state.steps.push(step("Run", "active", "distance", 1000));
 
     render();
   });
 
-  document.querySelector('#add-repeat').addEventListener('click', () => {
+  document.querySelector("#add-repeat").addEventListener("click", () => {
     if (!state.steps.length) return;
 
-    state.steps.push(
-      repeat(Math.min(2, state.steps.length), 4)
-    );
+    state.steps.push(repeat(Math.min(2, state.steps.length), 4));
 
     render();
   });
 
-  document.querySelector('#reset').addEventListener('click', () => {
-    state.name = 'Great South Run Session';
+  document.querySelector("#reset").addEventListener("click", () => {
+    state.editingPlanId = null;
+    state.editingWorkoutId = null;
+    state.name = "Great South Run Session";
     state.steps = cloneSteps(initialSteps);
-    state.scheduleDate = '';
+    state.scheduleDate = "";
     state.pushToWatch = true;
 
     render();
   });
 
-  document.querySelector('#schedule-date').addEventListener('change', e => {
+  document.querySelector("#schedule-date").addEventListener("change", (e) => {
     state.scheduleDate = e.target.value;
   });
 
-  document.querySelector('#push-to-watch').addEventListener('change', e => {
+  document.querySelector("#push-to-watch").addEventListener("change", (e) => {
     state.pushToWatch = e.target.checked;
   });
 
   document
-    .querySelector('#send-garmin')
-    .addEventListener('click', sendToGarmin);
+    .querySelector("#send-garmin")
+    .addEventListener("click", sendToGarmin);
+
+  document.querySelector("#export-fit").addEventListener("click", exportFit);
 
   document
-    .querySelector('#export-fit')
-    .addEventListener('click', exportFit);
+    .querySelector("#sync-plan")
+    .addEventListener("click", syncUpcomingPlan);
 
-  document
-    .querySelector('#sync-plan')
-    .addEventListener('click', syncUpcomingPlan);
-
-  document.querySelectorAll('.plan-load').forEach(button => {
-    button.addEventListener('click', () => {
-      const item = trainingPlan.find(
-        x => x.id === button.dataset.planId
-      );
+  document.querySelectorAll(".plan-load").forEach((button) => {
+    button.addEventListener("click", () => {
+      const item = trainingPlan.find((x) => x.id === button.dataset.planId);
 
       if (item) {
         loadPlanWorkout(item);
@@ -1071,11 +1138,9 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll('.plan-sync-one').forEach(button => {
-    button.addEventListener('click', async () => {
-      const item = trainingPlan.find(
-        x => x.id === button.dataset.planId
-      );
+  document.querySelectorAll(".plan-sync-one").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const item = trainingPlan.find((x) => x.id === button.dataset.planId);
 
       if (item) {
         await syncOnePlanItem(item);
@@ -1088,73 +1153,58 @@ function validateWorkout(workout = state) {
   const errors = [];
 
   if (!workout.name.trim()) {
-    errors.push('Give the workout a name.');
+    errors.push("Give the workout a name.");
   }
 
   if (!workout.steps.length) {
-    errors.push('Add at least one workout step.');
+    errors.push("Add at least one workout step.");
   }
 
   workout.steps.forEach((s, index) => {
-    if (s.kind === 'repeat') {
+    if (s.kind === "repeat") {
       if (index === 0) {
-        errors.push(
-          `Step ${index + 1}: a repeat cannot be the first step.`
-        );
+        errors.push(`Step ${index + 1}: a repeat cannot be the first step.`);
       }
 
-      if (
-        s.previousSteps < 1 ||
-        s.previousSteps > index
-      ) {
-        errors.push(
-          `Step ${index + 1}: repeat range is invalid.`
-        );
+      if (s.previousSteps < 1 || s.previousSteps > index) {
+        errors.push(`Step ${index + 1}: repeat range is invalid.`);
       }
 
       if (s.reps < 2) {
-        errors.push(
-          `Step ${index + 1}: repeats must be at least 2.`
-        );
+        errors.push(`Step ${index + 1}: repeats must be at least 2.`);
       }
 
       return;
     }
 
     if (
-      s.durationType !== 'open' &&
+      s.durationType !== "open" &&
       (!Number.isFinite(s.durationValue) || s.durationValue <= 0)
     ) {
-      errors.push(
-        `Step ${index + 1}: duration must be greater than zero.`
-      );
+      errors.push(`Step ${index + 1}: duration must be greater than zero.`);
     }
 
-    if (s.targetType === 'pace') {
+    if (s.targetType === "pace") {
       const fast = parsePace(s.targetLow);
       const slow = parsePace(s.targetHigh);
 
       if (!fast || !slow) {
-        errors.push(
-          `Step ${index + 1}: enter pace as m:ss, for example 4:45.`
-        );
+        errors.push(`Step ${index + 1}: enter pace as m:ss, for example 4:45.`);
       }
 
       if (fast && slow && fast > slow) {
         errors.push(
-          `Step ${index + 1}: fast pace must be quicker than slow pace.`
+          `Step ${index + 1}: fast pace must be quicker than slow pace.`,
         );
       }
     }
 
-    if (s.targetType === 'heartRate') {
+    if (s.targetType === "heartRate") {
       const low = Number(s.targetLow);
       const high = Number(s.targetHigh);
 
       if (!low || !high || low > high) {
-        errors.push(
-          `Step ${index + 1}: enter a valid heart-rate range.`
-        );
+        errors.push(`Step ${index + 1}: enter a valid heart-rate range.`);
       }
     }
   });
@@ -1163,12 +1213,12 @@ function validateWorkout(workout = state) {
 }
 
 function toFitStep(s, index) {
-  if (s.kind === 'repeat') {
+  if (s.kind === "repeat") {
     return {
       messageIndex: index,
-      durationType: 'repeatUntilStepsCmplt',
+      durationType: "repeatUntilStepsCmplt",
       durationValue: Math.max(0, index - s.previousSteps),
-      targetType: 'open',
+      targetType: "open",
       targetValue: s.reps,
     };
   }
@@ -1179,43 +1229,41 @@ function toFitStep(s, index) {
     intensity: s.intensity,
     durationType: s.durationType,
     targetType:
-      s.targetType === 'heartRate'
-        ? 'heartRate'
-        : s.targetType === 'pace'
-          ? 'speed'
-          : 'open',
+      s.targetType === "heartRate"
+        ? "heartRate"
+        : s.targetType === "pace"
+          ? "speed"
+          : "open",
     targetValue: 0,
     customTargetValueLow: 0,
     customTargetValueHigh: 0,
   };
 
-  if (s.durationType === 'distance') {
-    mesg.durationValue =
-      Math.round(Number(s.durationValue) * 100);
+  if (s.durationType === "distance") {
+    mesg.durationValue = Math.round(Number(s.durationValue) * 100);
   }
 
-  if (s.durationType === 'time') {
-    mesg.durationValue =
-      Math.round(Number(s.durationValue) * 1000);
+  if (s.durationType === "time") {
+    mesg.durationValue = Math.round(Number(s.durationValue) * 1000);
   }
 
-  if (s.targetType === 'pace') {
+  if (s.targetType === "pace") {
     const fastSpeed = paceToSpeed(s.targetLow);
     const slowSpeed = paceToSpeed(s.targetHigh);
 
-    mesg.customTargetValueLow =
-      Math.round(Math.min(fastSpeed, slowSpeed) * 1000);
+    mesg.customTargetValueLow = Math.round(
+      Math.min(fastSpeed, slowSpeed) * 1000,
+    );
 
-    mesg.customTargetValueHigh =
-      Math.round(Math.max(fastSpeed, slowSpeed) * 1000);
+    mesg.customTargetValueHigh = Math.round(
+      Math.max(fastSpeed, slowSpeed) * 1000,
+    );
   }
 
-  if (s.targetType === 'heartRate') {
-    mesg.customTargetValueLow =
-      Number(s.targetLow) + 100;
+  if (s.targetType === "heartRate") {
+    mesg.customTargetValueLow = Number(s.targetLow) + 100;
 
-    mesg.customTargetValueHigh =
-      Number(s.targetHigh) + 100;
+    mesg.customTargetValueHigh = Number(s.targetHigh) + 100;
   }
 
   return mesg;
@@ -1225,31 +1273,22 @@ function createFitFile() {
   const encoder = new Encoder();
   const now = new Date();
 
-  encoder.onMesg(
-    Profile.MesgNum.FILE_ID,
-    {
-      type: 'workout',
-      manufacturer: 'development',
-      product: 0,
-      serialNumber: Math.floor(Math.random() * 0xffffffff),
-      timeCreated: now,
-    }
-  );
+  encoder.onMesg(Profile.MesgNum.FILE_ID, {
+    type: "workout",
+    manufacturer: "development",
+    product: 0,
+    serialNumber: Math.floor(Math.random() * 0xffffffff),
+    timeCreated: now,
+  });
 
-  encoder.onMesg(
-    Profile.MesgNum.WORKOUT,
-    {
-      sport: state.sport,
-      numValidSteps: state.steps.length,
-      wktName: state.name.trim().slice(0, 32),
-    }
-  );
+  encoder.onMesg(Profile.MesgNum.WORKOUT, {
+    sport: state.sport,
+    numValidSteps: state.steps.length,
+    wktName: state.name.trim().slice(0, 32),
+  });
 
   state.steps.forEach((s, index) => {
-    encoder.onMesg(
-      Profile.MesgNum.WORKOUT_STEP,
-      toFitStep(s, index)
-    );
+    encoder.onMesg(Profile.MesgNum.WORKOUT_STEP, toFitStep(s, index));
   });
 
   return encoder.close();
@@ -1260,22 +1299,21 @@ function slugify(value) {
     value
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '') ||
-    'workout'
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "workout"
   );
 }
 
-function showStatus(message, type = 'error') {
-  const el = document.querySelector('#status');
+function showStatus(message, type = "error") {
+  const el = document.querySelector("#status");
 
   el.hidden = false;
   el.className = `status ${type}`;
   el.innerHTML = message;
 }
 
-function showPlanStatus(message, type = 'info') {
-  const el = document.querySelector('#plan-status');
+function showPlanStatus(message, type = "info") {
+  const el = document.querySelector("#plan-status");
 
   el.hidden = false;
   el.className = `status plan-status ${type}`;
@@ -1283,40 +1321,46 @@ function showPlanStatus(message, type = 'info') {
 }
 
 async function postWorkout(payload, builderKey) {
-  const response = await fetch('/api/send-to-garmin', {
-    method: 'POST',
+  const response = await fetch("/api/send-to-garmin", {
+    method: "POST",
     headers: {
-      'content-type': 'application/json',
-      'x-builder-key': builderKey,
+      "content-type": "application/json",
+      "x-builder-key": builderKey,
     },
     body: JSON.stringify(payload),
   });
 
-  const result =
-    await response.json().catch(() => ({}));
+  const result = await response.json().catch(() => ({}));
 
   if (response.status === 401) {
-    localStorage.removeItem('garminBuilderKey');
+    localStorage.removeItem("garminBuilderKey");
 
     throw new Error(
-      'Builder key rejected. The saved key has been cleared; try again and enter the Vercel GARMIN_BUILDER_KEY.'
+      "Builder key rejected. The saved key has been cleared; try again and enter the Vercel GARMIN_BUILDER_KEY.",
     );
   }
 
   if (!response.ok) {
     throw new Error(
-      result.error ||
-      `Garmin request failed (${response.status})`
+      result.error || `Garmin request failed (${response.status})`,
     );
   }
 
+  if (
+    !Number.isSafeInteger(Number(result.workoutId)) ||
+    Number(result.workoutId) <= 0
+  ) {
+    throw new Error(
+      "Garmin response had no valid workout ID. Check Garmin Connect before retrying.",
+    );
+  }
   return result;
 }
 
 function planPayload(item, pushToWatch = false) {
   return {
-    name: item.title.slice(0, 32),
-    sport: 'running',
+    name: planName(item).slice(0, 80),
+    sport: "running",
     steps: item.steps.map(({ id, ...s }) => s),
     scheduleDate: item.date,
     pushToWatch,
@@ -1324,14 +1368,14 @@ function planPayload(item, pushToWatch = false) {
 }
 
 async function syncOnePlanItem(item) {
-  if (!item.sync) return;
+  if (syncBusy || !item.sync) return;
 
   const syncMap = loadSyncMap();
 
   if (syncMap[item.id]) {
     showPlanStatus(
       `<strong>${escapeHtml(item.title)}</strong> is already marked as synced to Garmin.`,
-      'info'
+      "info",
     );
 
     return;
@@ -1341,48 +1385,44 @@ async function syncOnePlanItem(item) {
 
   if (!builderKey) return;
 
+  setSyncBusy(true);
   showPlanStatus(
     `Scheduling <strong>${escapeHtml(item.title)}</strong> for ${escapeHtml(formatDate(item.date))}…`,
-    'info'
+    "info",
   );
 
+  let message;
+  let status = "success";
   try {
-    const result = await postWorkout(
-      planPayload(
-        item,
-        item.date === localDateISO()
-      ),
-      builderKey
-    );
-
-    syncMap[item.id] = {
-      workoutId: result.workoutId,
-      workoutName: result.workoutName || item.title,
-      scheduledDate:
-        result.scheduledDate || item.date,
-    };
-
-    saveSyncMap(syncMap);
-
-    render();
-
-    setTimeout(() => {
-      showPlanStatus(
-        `<strong>${escapeHtml(item.title)}</strong> scheduled in Garmin Connect${result.workoutId ? ` · ID ${escapeHtml(result.workoutId)}` : ''}.`,
-        'success'
-      );
-    }, 0);
+    const payload = planPayload(item, item.date === localDateISO());
+    const result = await postWorkout(payload, builderKey);
+    rememberWorkout(item, result, payload);
+    message = `<strong>${escapeHtml(payload.name)}</strong> saved · ID ${escapeHtml(result.workoutId)}.`;
+    if (result.scheduledDate)
+      message += ` Scheduled for ${escapeHtml(result.scheduledDate)}.`;
+    if (result.warning) {
+      message += ` ${escapeHtml(result.warning)}`;
+      status = "info";
+    }
+    if (
+      payload.pushToWatch &&
+      !result.devicePush?.pushed &&
+      result.devicePush?.reason
+    ) {
+      message += ` ${escapeHtml(result.devicePush.reason)}`;
+    }
   } catch (error) {
-    console.error(error);
-
-    showPlanStatus(
-      `Garmin sync failed: ${escapeHtml(error.message || error)}`,
-      'error'
-    );
+    message = `Garmin sync failed: ${escapeHtml(error.message || error)}`;
+    status = "error";
+  } finally {
+    syncBusy = false;
+    render();
   }
+  showPlanStatus(message, status);
 }
 
 async function syncUpcomingPlan() {
+  if (syncBusy) return;
   const builderKey = getBuilderKey();
 
   if (!builderKey) return;
@@ -1391,72 +1431,53 @@ async function syncUpcomingPlan() {
   const syncMap = loadSyncMap();
 
   const upcoming = trainingPlan.filter(
-    item =>
-      item.sync &&
-      item.date >= today &&
-      !syncMap[item.id]
+    (item) => item.sync && item.date >= today && !syncMap[item.id],
   );
 
   if (!upcoming.length) {
     showPlanStatus(
-      'All upcoming structured sessions in this plan are already marked as synced.',
-      'success'
+      "All upcoming structured sessions in this plan are already marked as synced.",
+      "success",
     );
 
     return;
   }
 
-  const button =
-    document.querySelector('#sync-plan');
+  const button = document.querySelector("#sync-plan");
 
   const original = button.textContent;
 
-  button.disabled = true;
+  setSyncBusy(true);
 
   let completed = 0;
   const failures = [];
 
   try {
     for (const item of upcoming) {
-      button.textContent =
-        `Syncing ${completed + 1}/${upcoming.length}…`;
+      button.textContent = `Syncing ${completed + 1}/${upcoming.length}…`;
 
       showPlanStatus(
         `Scheduling <strong>${escapeHtml(item.title)}</strong> for ${escapeHtml(formatDate(item.date))}…`,
-        'info'
+        "info",
       );
 
       try {
-        const result = await postWorkout(
-          planPayload(item, false),
-          builderKey
-        );
+        const result = await postWorkout(planPayload(item, false), builderKey);
 
-        syncMap[item.id] = {
-          workoutId: result.workoutId,
-          workoutName:
-            result.workoutName || item.title,
-          scheduledDate:
-            result.scheduledDate || item.date,
-        };
-
-        saveSyncMap(syncMap);
+        rememberWorkout(item, result, planPayload(item));
+        if (result.warning) failures.push(`${item.title}: ${result.warning}`);
 
         completed += 1;
       } catch (error) {
-        failures.push(
-          `${item.title}: ${error.message || error}`
-        );
+        failures.push(`${item.title}: ${error.message || error}`);
 
-        if (
-          String(error.message || error)
-            .includes('Builder key rejected')
-        ) {
+        if (String(error.message || error).includes("Builder key rejected")) {
           break;
         }
       }
     }
   } finally {
+    syncBusy = false;
     button.disabled = false;
     button.textContent = original;
   }
@@ -1466,24 +1487,25 @@ async function syncUpcomingPlan() {
   setTimeout(() => {
     if (failures.length) {
       showPlanStatus(
-        `<strong>Synced ${completed} workout${completed === 1 ? '' : 's'}.</strong><br>${failures.map(escapeHtml).join('<br>')}`,
-        completed ? 'info' : 'error'
+        `<strong>Synced ${completed} workout${completed === 1 ? "" : "s"}.</strong><br>${failures.map(escapeHtml).join("<br>")}`,
+        completed ? "info" : "error",
       );
     } else {
       showPlanStatus(
-        `<strong>Done.</strong> Scheduled ${completed} upcoming structured workout${completed === 1 ? '' : 's'} in Garmin Connect.`,
-        'success'
+        `<strong>Done.</strong> Scheduled ${completed} upcoming structured workout${completed === 1 ? "" : "s"} in Garmin Connect.`,
+        "success",
       );
     }
   }, 0);
 }
 
 async function sendToGarmin() {
+  if (syncBusy) return;
   const errors = validateWorkout();
 
   if (errors.length) {
     showStatus(
-      `<strong>Check the workout:</strong><br>${errors.map(escapeHtml).join('<br>')}`
+      `<strong>Check the workout:</strong><br>${errors.map(escapeHtml).join("<br>")}`,
     );
 
     return;
@@ -1493,76 +1515,48 @@ async function sendToGarmin() {
 
   if (!builderKey) return;
 
-  const button =
-    document.querySelector('#send-garmin');
-
-  const original = button.textContent;
-
-  button.disabled = true;
-  button.textContent = 'Sending…';
-
-  showStatus(
-    'Sending workout securely to Garmin Connect…',
-    'info'
-  );
-
+  const payload = {
+    workoutId: state.editingWorkoutId,
+    name: state.name.trim(),
+    sport: state.sport,
+    steps: state.steps.map(({ id, ...s }) => s),
+    scheduleDate: state.editingWorkoutId ? null : state.scheduleDate || null,
+    pushToWatch: state.pushToWatch,
+  };
+  setSyncBusy(true);
+  showStatus("Saving workout to Garmin Connect…", "info");
+  let message;
+  let status = "success";
   try {
-    const result = await postWorkout(
-      {
-        workoutId: state.editingWorkoutId || null,
-        name: state.name.trim(),
-        sport: state.sport,
-        steps: state.steps.map(({ id, ...s }) => s),
-        scheduleDate: state.scheduleDate || null,
-        pushToWatch: state.pushToWatch,
-      }  
-      builderKey
-    );
-
-      const parts = [
-  result.updated
-    ? `Updated Garmin workout <strong>${escapeHtml(result.workoutName || state.name)}</strong>`
-    : `Created Garmin workout <strong>${escapeHtml(result.workoutName || state.name)}</strong>`,
-];
-    if (result.workoutId) {
-      parts.push(
-        `ID ${escapeHtml(result.workoutId)}`
-      );
+    const result = await postWorkout(payload, builderKey);
+    state.editingWorkoutId = result.workoutId;
+    if (!result.updated) state.scheduleDate = result.scheduledDate || "";
+    const item = trainingPlan.find((item) => item.id === state.editingPlanId);
+    if (item) rememberWorkout(item, result, payload);
+    const parts = [
+      `${result.updated ? "Updated" : "Created"} <strong>${escapeHtml(result.workoutName || payload.name)}</strong>`,
+      `ID ${escapeHtml(result.workoutId)}`,
+    ];
+    if (result.updated) parts.push("existing calendar entries preserved");
+    if (result.scheduledDate)
+      parts.push(`scheduled for ${escapeHtml(result.scheduledDate)}`);
+    if (result.warning) {
+      parts.push(escapeHtml(result.warning));
+      status = "info";
     }
-
-    if (result.scheduledDate) {
-      parts.push(
-        `scheduled for ${escapeHtml(result.scheduledDate)}`
-      );
-    }
-
-    if (result.devicePush?.pushed) {
-      parts.push(
-        `queued for ${escapeHtml(result.devicePush.deviceName || 'your Garmin device')}`
-      );
-    } else if (
-      state.pushToWatch &&
-      result.devicePush?.reason
-    ) {
-      parts.push(
-        escapeHtml(result.devicePush.reason)
-      );
-    }
-
-    showStatus(
-      parts.join(' · '),
-      'success'
-    );
+    if (result.devicePush?.pushed)
+      parts.push(`queued for ${escapeHtml(result.devicePush.deviceName)}`);
+    else if (payload.pushToWatch && result.devicePush?.reason)
+      parts.push(escapeHtml(result.devicePush.reason));
+    message = parts.join(" · ");
   } catch (error) {
-    console.error(error);
-
-    showStatus(
-      `Garmin Connect send failed: ${escapeHtml(error.message || error)}`
-    );
+    message = `Garmin save failed: ${escapeHtml(error.message || error)}`;
+    status = "error";
   } finally {
-    button.disabled = false;
-    button.textContent = original;
+    syncBusy = false;
+    render();
   }
+  showStatus(message, status);
 }
 
 function exportFit() {
@@ -1570,7 +1564,7 @@ function exportFit() {
 
   if (errors.length) {
     showStatus(
-      `<strong>Check the workout:</strong><br>${errors.map(escapeHtml).join('<br>')}`
+      `<strong>Check the workout:</strong><br>${errors.map(escapeHtml).join("<br>")}`,
     );
 
     return;
@@ -1579,20 +1573,16 @@ function exportFit() {
   try {
     const bytes = createFitFile();
 
-    const blob = new Blob(
-      [bytes],
-      {
-        type: 'application/octet-stream',
-      }
-    );
+    const blob = new Blob([bytes], {
+      type: "application/octet-stream",
+    });
 
     const url = URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
+    const a = document.createElement("a");
 
     a.href = url;
-    a.download =
-      `${slugify(state.name)}.fit`;
+    a.download = `${slugify(state.name)}.fit`;
 
     document.body.appendChild(a);
 
@@ -1603,14 +1593,12 @@ function exportFit() {
 
     showStatus(
       `Created <strong>${escapeHtml(a.download)}</strong> with ${state.steps.length} FIT workout steps.`,
-      'success'
+      "success",
     );
   } catch (error) {
     console.error(error);
 
-    showStatus(
-      `FIT export failed: ${escapeHtml(error.message || error)}`
-    );
+    showStatus(`FIT export failed: ${escapeHtml(error.message || error)}`);
   }
 }
 
