@@ -370,8 +370,17 @@ function saveSyncMap(map) {
   localStorage.setItem("garminPlanSyncV1", JSON.stringify(map));
 }
 
+function customIds() {
+  return new Set(loadCustomWorkouts().map((item) => item.id));
+}
+
+function currentPlanItems() {
+  const ids = customIds();
+  return [...trainingPlan.filter((item) => !item.custom || ids.has(item.id))];
+}
+
 function sortedPlanItems() {
-  return [...trainingPlan].sort((a, b) => `${a.date}-${a.title}`.localeCompare(`${b.date}-${b.title}`));
+  return currentPlanItems().sort((a, b) => `${a.date}-${a.title}`.localeCompare(`${b.date}-${b.title}`));
 }
 
 async function fetchStravaUpdates() {
@@ -392,7 +401,7 @@ async function clearStravaUpdate(workoutId = "") {
   const url = workoutId ? `/api/plan-strava?workoutId=${encodeURIComponent(workoutId)}` : "/api/plan-strava";
   await fetch(url, { method: "DELETE", headers: { "x-builder-key": builderKey } });
   await fetchStravaUpdates();
-  fetchStravaUpdates().finally(render);
+  render();
 }
 
 function getBuilderKey() {
@@ -724,7 +733,7 @@ function planRows() {
           </button>
         `;
 
-      const stravaButton = stravaUpdated
+      const stravaButton = synced?.workoutId
         ? `
           <button class="ghost plan-force-strava" data-workout-id="${escapeHtml(synced.workoutId)}">
             Force Strava update
@@ -1117,14 +1126,16 @@ function saveCurrentWorkoutToList() {
     custom: true,
     steps: cloneSteps(state.steps),
   };
-  const custom = loadCustomWorkouts();
+  const custom = loadCustomWorkouts().filter((existing) => existing.id !== item.id);
   custom.push(item);
   saveCustomWorkouts(custom);
-  trainingPlan.push(item);
+  const existingIndex = trainingPlan.findIndex((existing) => existing.id === item.id);
+  if (existingIndex >= 0) trainingPlan[existingIndex] = item;
+  else trainingPlan.push(item);
   state.editingPlanId = item.id;
   state.editingWorkoutId = null;
   render();
-  showPlanStatus(`<strong>${escapeHtml(item.title)}</strong> added to the workout list.`, "success");
+  showPlanStatus(`<strong>${escapeHtml(item.title)}</strong> added to the workout list for ${escapeHtml(formatDate(item.date))}.`, "success");
 }
 
 function clearPlanSyncHistory() {
