@@ -437,17 +437,19 @@ function sortedPlanItems() {
   return currentPlanItems().sort((a, b) => `${a.date}-${a.title}`.localeCompare(`${b.date}-${b.title}`));
 }
 
-async function fetchStravaUpdates() {
-  const builderKey = localStorage.getItem("garminBuilderKey") || "";
-  if (!builderKey) return;
+async function fetchStravaUpdates(promptForKey = false) {
+  const builderKey = promptForKey ? getBuilderKey() : localStorage.getItem("garminBuilderKey") || "";
+  if (!builderKey) return false;
   try {
     const response = await fetch("/api/plan-strava", { headers: { "x-builder-key": builderKey } });
     const data = await response.json();
     state.stravaUpdates = data.updates || {};
     state.sharedPlans = data.plans || {};
+    return true;
   } catch {
     state.stravaUpdates = {};
     state.sharedPlans = {};
+    return false;
   }
 }
 
@@ -988,6 +990,10 @@ function render() {
           Clear Strava update history
         </button>
 
+        <button class="ghost" id="refresh-shared-records">
+          Refresh shared records
+        </button>
+
         <button class="primary" id="sync-plan">
           Sync all upcoming workouts
         </button>
@@ -1296,6 +1302,17 @@ function bindEvents() {
       await clearStravaUpdate();
       showPlanStatus("Strava update history cleared.", "success");
     }
+  });
+  document.querySelector("#refresh-shared-records").addEventListener("click", async () => {
+    const loaded = await fetchStravaUpdates(true);
+    render();
+    const count = Object.keys(state.sharedPlans || {}).length;
+    showPlanStatus(
+      loaded
+        ? `Loaded ${count} shared record${count === 1 ? "" : "s"}.`
+        : "Could not load shared records. Check the H2G key and builder Vercel environment.",
+      loaded ? "success" : "error",
+    );
   });
   document.querySelector("#workout-name").addEventListener("input", (e) => {
     state.name = e.target.value;
