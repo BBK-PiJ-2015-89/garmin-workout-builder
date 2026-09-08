@@ -241,11 +241,29 @@ const trainingPlan = [
   },
 ];
 
+const CUSTOM_PLAN_KEY = "garminCustomWorkoutsV1";
+
+function loadCustomWorkouts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CUSTOM_PLAN_KEY) || "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomWorkouts(items) {
+  localStorage.setItem(CUSTOM_PLAN_KEY, JSON.stringify(items));
+}
+
+trainingPlan.push(...loadCustomWorkouts());
+
 // Number every training session in plan order, including club runs; exclude race day.
 function planName(item) {
+  if (item.custom) return item.title;
   const day =
     trainingPlan
-      .filter((session) => !session.race)
+      .filter((session) => !session.race && !session.custom)
       .findIndex((session) => session.id === item.id) + 1;
   return item.race
     ? "Great South Run - Race Day"
@@ -966,6 +984,13 @@ function render() {
 
           <button
             class="secondary full"
+            id="save-workout-list"
+          >
+            Save to workout list
+          </button>
+
+          <button
+            class="secondary full"
             id="export-fit"
           >
             Download .FIT backup
@@ -1031,6 +1056,33 @@ function loadPlanWorkout(item) {
       block: "start",
     });
   }, 0);
+}
+
+function saveCurrentWorkoutToList() {
+  if (syncBusy) return;
+  const errors = validateWorkout();
+  if (errors.length) {
+    showStatus(errors.join(" "), "error");
+    return;
+  }
+  const item = {
+    id: `custom-${Date.now()}`,
+    date: state.scheduleDate || localDateISO(),
+    type: "Custom",
+    title: state.name.trim(),
+    description: "Custom planned workout",
+    sync: true,
+    custom: true,
+    steps: cloneSteps(state.steps),
+  };
+  const custom = loadCustomWorkouts();
+  custom.push(item);
+  saveCustomWorkouts(custom);
+  trainingPlan.push(item);
+  state.editingPlanId = item.id;
+  state.editingWorkoutId = null;
+  render();
+  showPlanStatus(`<strong>${escapeHtml(item.title)}</strong> added to the workout list.`, "success");
 }
 
 function clearPlanSyncHistory() {
@@ -1150,6 +1202,8 @@ function bindEvents() {
   document
     .querySelector("#send-garmin")
     .addEventListener("click", sendToGarmin);
+
+  document.querySelector("#save-workout-list").addEventListener("click", saveCurrentWorkoutToList);
 
   document.querySelector("#export-fit").addEventListener("click", exportFit);
 
@@ -1396,7 +1450,7 @@ function planPayload(item, pushToWatch = false) {
     pushToWatch,
     planMeta: {
       planId: item.id,
-      planName: "Great South Run",
+      planName: item.custom ? "Custom Workouts" : "Great South Run",
       sessionTitle: item.title,
       workoutTitle: name,
       description: item.description,
@@ -1564,7 +1618,7 @@ async function sendToGarmin() {
   if (planItem) {
     payload.planMeta = {
       planId: planItem.id,
-      planName: "Great South Run",
+      planName: planItem.custom ? "Custom Workouts" : "Great South Run",
       sessionTitle: planItem.title,
       workoutTitle: payload.name,
       description: planItem.description,
