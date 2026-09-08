@@ -847,6 +847,10 @@ function render() {
           browser, so pressing it again will not recreate those workouts.
         </p>
 
+        <button class="ghost" id="clear-plan-sync">
+          Clear plan sync history
+        </button>
+
         <button class="primary" id="sync-plan">
           Sync all upcoming workouts
         </button>
@@ -1029,7 +1033,32 @@ function loadPlanWorkout(item) {
   }, 0);
 }
 
+function clearPlanSyncHistory() {
+  if (syncBusy) return;
+  const confirmed = window.confirm(
+    "Clear this browser's plan sync history and saved plan edits? Your builder key will be kept.\n\nThis does not delete workouts or calendar entries from Garmin Connect. Syncing again can create duplicates unless you have removed the old workouts there.",
+  );
+  if (!confirmed) return;
+
+  try {
+    localStorage.removeItem("garminPlanSyncV1");
+    state.editingPlanId = null;
+    state.editingWorkoutId = null;
+    render();
+    showPlanStatus(
+      "Plan sync history cleared. Your builder key was kept. You can now sync the plan again.",
+      "success",
+    );
+  } catch {
+    showPlanStatus(
+      "Could not clear plan sync history. Check that this browser allows site storage and try again.",
+      "error",
+    );
+  }
+}
+
 function bindEvents() {
+  document.querySelector("#clear-plan-sync").addEventListener("click", clearPlanSyncHistory);
   document.querySelector("#workout-name").addEventListener("input", (e) => {
     state.name = e.target.value;
 
