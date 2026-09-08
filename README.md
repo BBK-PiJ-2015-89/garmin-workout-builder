@@ -1,62 +1,47 @@
 # Garmin Workout Builder
 
-A small Vite web app for building structured running workouts and exporting them as Garmin FIT workout files.
+Browser-based structured running workout builder with two delivery paths:
 
-## What it does
+1. **Send to Garmin Connect** using the existing DI OAuth tokens stored by Hevy2Garmin.
+2. **Download `.FIT`** as a fallback for manual USB copy to `GARMIN/NewFiles`.
 
-- Builds running workouts from distance, time and open-ended steps.
-- Supports warm-up, active, recovery, rest and cool-down intensities.
-- Supports custom pace targets and heart-rate targets.
-- Supports repeat blocks using FIT's `repeatUntilStepsCmplt` workout step.
-- Exports a `.fit` file entirely in the browser using Garmin's official `@garmin/fitsdk` JavaScript package.
-- Is ready to deploy on Vercel.
+## Garmin Connect integration
 
-## Run locally
+The serverless endpoint at `api/send-to-garmin.js` uses `garmin-auth` and `DBTokenStore`. This means it can reuse the Garmin tokens already stored by the Hevy2Garmin web app in the `platform_credentials` Postgres table under platform `garmin_tokens`.
+
+### Required Vercel environment variables
+
+- `DATABASE_URL`: the **same Postgres connection string used by Hevy2Garmin**. `POSTGRES_URL` is also accepted.
+- `GARMIN_BUILDER_KEY`: a new random secret you choose. The web app asks for it on first send and holds it only in browser `sessionStorage`.
+
+Optional:
+
+- `GARMIN_TOKEN_PLATFORM`: defaults to `garmin_tokens`. Leave this alone if sharing Hevy2Garmin's token row.
+- `GARMIN_DEVICE_ID`: force a particular Garmin device. If omitted, the endpoint looks for a Fenix 8/Fenix device, or uses the only registered device when there is exactly one.
+- `GARMIN_DEVICE_NAME`: friendly name shown after a forced-device push.
+
+Do **not** put Garmin passwords or DI OAuth tokens in the repository or in frontend `VITE_*` variables.
+
+## What Send to Garmin does
+
+- Converts the browser workout into Garmin's structured workout JSON.
+- POSTs it to `/workout-service/workout`.
+- If a date is chosen, schedules it with `/workout-service/schedule/{workoutId}`.
+- If **Push to my Garmin watch now** is selected, queues the FIT workout through Garmin's device-message service.
+
+The Garmin Connect endpoints are private/unofficial and can change without notice.
+
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Then open the local address shown by Vite.
+Vite serves the frontend locally. The `/api` function is designed for Vercel; use `vercel dev` if you want to exercise the serverless endpoint locally.
 
 ## Build
 
 ```bash
 npm run build
 ```
-
-## Put a workout on a Garmin watch by USB
-
-1. Build the workout in the app and select **Download .FIT workout**.
-2. Connect the Garmin watch to the computer by USB.
-3. Open the Garmin device storage.
-4. Copy the downloaded `.fit` file into `GARMIN/NewFiles`.
-5. Safely eject the watch.
-6. On the watch, open **Run > Training > Workouts** and select the imported workout.
-
-The exact menu wording can vary by Garmin model and software version.
-
-## Deploy to Vercel
-
-Import this GitHub repository into Vercel. Vercel should detect Vite automatically. No environment variables are required.
-
-## FIT implementation
-
-This build targets Garmin FIT JavaScript SDK profile `21.214.0` and writes:
-
-- `FILE_ID` with file type `workout`
-- `WORKOUT`
-- one `WORKOUT_STEP` message per configured step
-
-The encoder is given the underlying FIT workout fields used in Garmin's official workout encoding recipe:
-
-- time duration: `durationValue = seconds × 1000`
-- distance duration: `durationValue = metres × 100`
-- pace target: `customTargetValueLow/High = metres/second × 1000`, with target type `speed`
-- heart-rate target: `customTargetValueLow/High = bpm + 100`, with target type `heartRate`
-- repeat: `durationValue = message index to repeat from`, `targetValue = repetitions`
-
-## Security
-
-This project contains no Garmin username, password, API key, token or other account secret. FIT generation happens locally in the browser.

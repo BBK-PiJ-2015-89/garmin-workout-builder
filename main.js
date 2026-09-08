@@ -15,6 +15,8 @@ const state = {
   name: 'Great South Run Session',
   sport: 'running',
   steps: structuredClone(initialSteps),
+  scheduleDate: '',
+  pushToWatch: true,
 };
 
 function escapeHtml(value = '') {
@@ -184,15 +186,25 @@ function render() {
           <div class="eyebrow">PREVIEW</div>
           <h2>${escapeHtml(state.name)}</h2>
           <div class="summary-list">${summaryRows()}</div>
+          <div class="garmin-options">
+            <label>Schedule date <span class="muted">(optional)</span>
+              <input id="schedule-date" type="date" value="${escapeHtml(state.scheduleDate)}">
+            </label>
+            <label class="check-row">
+              <input id="push-to-watch" type="checkbox" ${state.pushToWatch ? 'checked' : ''}>
+              <span>Push to my Garmin watch now</span>
+            </label>
+          </div>
           <div id="status" class="status" hidden></div>
-          <button class="primary" id="export-fit">Download .FIT workout</button>
+          <button class="primary" id="send-garmin">Send to Garmin Connect</button>
+          <button class="secondary full" id="export-fit">Download .FIT backup</button>
           <button class="ghost" id="reset">Reset example</button>
-          <p class="hint">Copy the downloaded FIT file to <code>GARMIN/NewFiles</code> while your watch is connected by USB.</p>
+          <p class="hint">Garmin Connect upload uses your existing server-side DI OAuth session. The FIT download remains available as a fallback.</p>
         </div>
       </aside>
     </main>
 
-    <footer class="shell footer">Runs locally in your browser. No Garmin password or account token is required.</footer>
+    <footer class="shell footer">Workout editing runs in your browser. Garmin authentication tokens stay server-side and are never sent to the browser.</footer>
   `;
   bindEvents();
 }
@@ -250,9 +262,14 @@ function bindEvents() {
   document.querySelector('#reset').addEventListener('click', () => {
     state.name = 'Great South Run Session';
     state.steps = structuredClone(initialSteps).map(s => ({ ...s, id: uid() }));
+    state.scheduleDate = '';
+    state.pushToWatch = true;
     render();
   });
 
+  document.querySelector('#schedule-date').addEventListener('change', e => { state.scheduleDate = e.target.value; });
+  document.querySelector('#push-to-watch').addEventListener('change', e => { state.pushToWatch = e.target.checked; });
+  document.querySelector('#send-garmin').addEventListener('click', sendToGarmin);
   document.querySelector('#export-fit').addEventListener('click', exportFit);
 }
 
@@ -363,6 +380,64 @@ function showStatus(message, type = 'error') {
   el.hidden = false;
   el.className = `status ${type}`;
   el.innerHTML = message;
+}
+
+async function sendToGarmin() {
+  const errors = validateWorkout();
+  if (errors.length) {
+    showStatus(`<strong>Check the workout:</strong><br>${errors.map(escapeHtml).join('<br>')}`);
+    return;
+  }
+
+  let builderKey = sessionStorage.getItem('garminBuilderKey') || '';
+  if (!builderKey) {
+    builderKey = window.prompt('Enter your Garmin Workout Builder key. This is the GARMIN_BUILDER_KEY you set in Vercel.');
+    if (!builderKey) return;
+    sessionStorage.setItem('garminBuilderKey', builderKey);
+  }
+
+  const button = document.querySelector('#send-garmin');
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Sending…';
+  showStatus('Sending workout securely to Garmin Connect…', 'info');
+
+  try {
+    const response = await fetch('/api/send-to-garmin', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-builder-key': builderKey,
+      },
+      body: JSON.stringify({
+        name: state.name.trim(),
+        sport: state.sport,
+        steps: state.steps.map(({ id, ...step }) => step),
+        scheduleDate: state.scheduleDate || null,
+        pushToWatch: state.pushToWatch,
+      }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      sessionStorage.removeItem('garminBuilderKey');
+      throw new Error('Builder key rejected. Try Send again and enter the Vercel GARMIN_BUILDER_KEY.');
+    }
+    if (!response.ok) throw new Error(result.error || `Garmin request failed (${response.status})`);
+
+    const parts = [`Created Garmin workout <strong>${escapeHtml(result.workoutName || state.name)}</strong>`];
+    if (result.workoutId) parts.push(`ID ${escapeHtml(result.workoutId)}`);
+    if (result.scheduledDate) parts.push(`scheduled for ${escapeHtml(result.scheduledDate)}`);
+    if (result.devicePush?.pushed) parts.push(`queued for ${escapeHtml(result.devicePush.deviceName || 'your Garmin device')}`);
+    else if (state.pushToWatch && result.devicePush?.reason) parts.push(escapeHtml(result.devicePush.reason));
+    showStatus(parts.join(' · '), 'success');
+  } catch (error) {
+    console.error(error);
+    showStatus(`Garmin Connect send failed: ${escapeHtml(error.message || error)}`);
+  } finally {
+    button.disabled = false;
+    button.textContent = original;
+  }
 }
 
 function exportFit() {

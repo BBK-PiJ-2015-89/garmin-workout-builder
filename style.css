@@ -80,3 +80,12 @@ input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px r
   .step-actions { grid-column:2; flex-direction:row; }
   .add-row { flex-direction:column; }
 }
+
+.garmin-options { margin: 1rem 0; display: grid; gap: .75rem; }
+.garmin-options label { display: grid; gap: .35rem; font-size: .9rem; }
+.garmin-options input[type="date"] { width: 100%; }
+.check-row { grid-template-columns: auto 1fr !important; align-items: center; gap: .6rem !important; }
+.check-row input { width: auto !important; }
+.full { width: 100%; margin-top: .65rem; }
+.muted { opacity: .65; font-weight: 400; }
+.status.info { border-color: rgba(96,165,250,.45); background: rgba(59,130,246,.08); }
