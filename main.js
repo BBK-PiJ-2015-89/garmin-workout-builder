@@ -389,11 +389,11 @@ async function sendToGarmin() {
     return;
   }
 
-  let builderKey = sessionStorage.getItem('garminBuilderKey') || '';
+  let builderKey = localStorage.getItem('garminBuilderKey') || '';
   if (!builderKey) {
     builderKey = window.prompt('Enter your Garmin Workout Builder key. This is the GARMIN_BUILDER_KEY you set in Vercel.');
     if (!builderKey) return;
-    sessionStorage.setItem('garminBuilderKey', builderKey);
+    localStorage.setItem('garminBuilderKey', builderKey);
   }
 
   const button = document.querySelector('#send-garmin');
@@ -420,7 +420,7 @@ async function sendToGarmin() {
 
     const result = await response.json().catch(() => ({}));
     if (response.status === 401) {
-      sessionStorage.removeItem('garminBuilderKey');
+      localStorage.removeItem('garminBuilderKey');
       throw new Error('Builder key rejected. Try Send again and enter the Vercel GARMIN_BUILDER_KEY.');
     }
     if (!response.ok) throw new Error(result.error || `Garmin request failed (${response.status})`);
