@@ -1167,12 +1167,14 @@ function saveCurrentWorkoutToList() {
     showStatus(errors.join(" "), "error");
     return;
   }
+  const existingPlan = trainingPlan.find((existing) => existing.id === state.editingPlanId);
+  const existingSync = state.editingPlanId ? loadSyncMap()[state.editingPlanId] : null;
   const item = {
-    id: `custom-${Date.now()}`,
-    date: state.scheduleDate || localDateISO(),
+    id: existingPlan?.custom ? existingPlan.id : `custom-${Date.now()}`,
+    date: state.scheduleDate || existingSync?.scheduledDate || localDateISO(),
     type: "Custom",
     title: state.name.trim(),
-    description: "Custom planned workout",
+    description: existingPlan?.description || "Custom planned workout",
     sync: true,
     custom: true,
     steps: cloneSteps(state.steps),
@@ -1184,7 +1186,7 @@ function saveCurrentWorkoutToList() {
   if (existingIndex >= 0) trainingPlan[existingIndex] = item;
   else trainingPlan.push(item);
   state.editingPlanId = item.id;
-  state.editingWorkoutId = null;
+  state.editingWorkoutId = existingSync?.workoutId || state.editingWorkoutId || null;
   render();
   showPlanStatus(`<strong>${escapeHtml(item.title)}</strong> added to the workout list for ${escapeHtml(formatDate(item.date))}.`, "success");
 }

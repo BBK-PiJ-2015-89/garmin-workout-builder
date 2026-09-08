@@ -227,6 +227,13 @@ async function rememberPlannedWorkout(body, workoutId, workoutName, scheduledDat
       : {};
   const workouts =
     value.workouts && typeof value.workouts === "object" ? value.workouts : {};
+
+  for (const [existingWorkoutId, existing] of Object.entries(workouts)) {
+    if (existing?.planId === meta.planId && existingWorkoutId !== String(workoutId)) {
+      delete workouts[existingWorkoutId];
+    }
+  }
+
   workouts[String(workoutId)] = {
     ...meta,
     garminWorkoutId: String(workoutId),

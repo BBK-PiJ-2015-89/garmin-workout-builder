@@ -35,7 +35,19 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "DELETE") {
+    const plannedWorkoutId = req.query?.plannedWorkoutId ? String(req.query.plannedWorkoutId) : "";
     const workoutId = req.query?.workoutId ? String(req.query.workoutId) : "";
+    if (plannedWorkoutId) {
+      const rows = await db.query("SELECT value FROM app_cache WHERE key = $1 LIMIT 1", ["planned_workouts"]);
+      const value = rows.rows[0]?.value && typeof rows.rows[0].value === "object" ? rows.rows[0].value : {};
+      const workouts = value.workouts && typeof value.workouts === "object" ? value.workouts : {};
+      delete workouts[plannedWorkoutId];
+      await db.query(
+        `INSERT INTO app_cache (key, value, updated_at) VALUES ($1, $2::jsonb, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
+        ["planned_workouts", JSON.stringify({ ...value, workouts })],
+      );
+      return json(res, 200, { cleared: plannedWorkoutId });
+    }
     if (!workoutId) {
       await db.query("DELETE FROM app_cache WHERE key = $1", ["planned_strava_updates"]);
       return json(res, 200, { cleared: "all" });
