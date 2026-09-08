@@ -30,6 +30,17 @@ function json(res, status, body) {
   res.status(status).setHeader("content-type", "application/json");
   res.end(JSON.stringify(body));
 }
+function builderKeys() {
+  return [process.env.H2G_SECRET, process.env.GARMIN_BUILDER_KEY]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+}
+
+function hasBuilderAccess(req) {
+  const provided = String(req.headers["x-builder-key"] || "").trim();
+  return Boolean(provided && builderKeys().includes(provided));
+}
+
 
 function parsePace(value) {
   const match = String(value ?? "")
@@ -316,19 +327,18 @@ export default async function handler(req, res) {
     return json(res, 200, {
       ok: true,
       configured: Boolean(databaseUrl()),
-      protected: Boolean(process.env.GARMIN_BUILDER_KEY),
+      protected: builderKeys().length > 0,
     });
   }
   if (req.method !== "POST")
     return json(res, 405, { error: "Method not allowed" });
 
-  const requiredKey = process.env.GARMIN_BUILDER_KEY;
-  if (!requiredKey)
+  if (builderKeys().length === 0)
     return json(res, 503, {
-      error: "GARMIN_BUILDER_KEY is not configured on Vercel",
+      error: "H2G_SECRET or GARMIN_BUILDER_KEY is not configured on Vercel",
     });
-  if (req.headers["x-builder-key"] !== requiredKey)
-    return json(res, 401, { error: "Invalid builder key" });
+  if (!hasBuilderAccess(req))
+    return json(res, 401, { error: "Invalid H2G key" });
 
   // Validate all user input before any Garmin mutation.
   let workout;

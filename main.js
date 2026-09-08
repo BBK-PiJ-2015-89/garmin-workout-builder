@@ -424,7 +424,7 @@ function getBuilderKey() {
 
   if (!builderKey) {
     builderKey = window.prompt(
-      "Enter your Garmin Workout Builder key. This is the GARMIN_BUILDER_KEY you set in Vercel.",
+      "Enter your H2G key. This is the H2G_SECRET you set in Vercel and Home Assistant.",
     );
 
     if (!builderKey) return "";
@@ -1092,7 +1092,7 @@ function render() {
 
     <footer class="shell footer">
       Garmin authentication tokens stay server-side.
-      Your builder key and local plan sync history are stored only in this browser.
+      Your H2G key and local plan sync history are stored only in this browser.
     </footer>
   `;
 
@@ -1192,7 +1192,7 @@ function saveCurrentWorkoutToList() {
 function clearPlanSyncHistory() {
   if (syncBusy) return;
   const confirmed = window.confirm(
-    "Clear this browser's plan sync history and saved plan edits? Your builder key will be kept.\n\nThis does not delete workouts or calendar entries from Garmin Connect. Syncing again can create duplicates unless you have removed the old workouts there.",
+    "Clear this browser's plan sync history and saved plan edits? Your H2G key will be kept.\n\nThis does not delete workouts or calendar entries from Garmin Connect. Syncing again can create duplicates unless you have removed the old workouts there.",
   );
   if (!confirmed) return;
 
@@ -1202,7 +1202,7 @@ function clearPlanSyncHistory() {
     state.editingWorkoutId = null;
     render();
     showPlanStatus(
-      "Plan sync history cleared. Your builder key was kept. You can now sync the plan again.",
+      "Plan sync history cleared. Your H2G key was kept. You can now sync the plan again.",
       "success",
     );
   } catch {
@@ -1540,7 +1540,7 @@ async function postWorkout(payload, builderKey) {
     localStorage.removeItem("garminBuilderKey");
 
     throw new Error(
-      "Builder key rejected. The saved key has been cleared; try again and enter the Vercel GARMIN_BUILDER_KEY.",
+      "H2G key rejected. The saved key has been cleared; try again and enter the Vercel H2G_SECRET.",
     );
   }
 
@@ -1683,7 +1683,7 @@ async function syncUpcomingPlan() {
       } catch (error) {
         failures.push(`${item.title}: ${error.message || error}`);
 
-        if (String(error.message || error).includes("Builder key rejected")) {
+        if (String(error.message || error).includes("H2G key rejected")) {
           break;
         }
       }

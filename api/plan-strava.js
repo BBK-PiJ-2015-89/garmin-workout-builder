@@ -13,9 +13,15 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+function builderKeys() {
+  return [process.env.H2G_SECRET, process.env.GARMIN_BUILDER_KEY]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+}
+
 function authorised(req) {
-  const secret = process.env.GARMIN_BUILDER_KEY;
-  return secret && req.headers["x-builder-key"] === secret;
+  const provided = String(req.headers["x-builder-key"] || "").trim();
+  return Boolean(provided && builderKeys().includes(provided));
 }
 
 export default async function handler(req, res) {
