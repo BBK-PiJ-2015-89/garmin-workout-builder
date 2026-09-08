@@ -228,6 +228,8 @@ const state = {
   steps: structuredClone(initialSteps),
   scheduleDate: '',
   pushToWatch: true,
+  editingPlanId: null,
+  editingWorkoutId: null,
 };
 
 function escapeHtml(value = '') {
@@ -881,6 +883,10 @@ function render() {
             class="primary"
             id="send-garmin"
           >
+            ${state.editingWorkoutId
+              ? 'Update Garmin Workout'
+              : 'Send to Garmin Connect'}
+          </button>
             Send to Garmin Connect
           </button>
 
@@ -929,11 +935,17 @@ function updateStep(id, field, value) {
 }
 
 function loadPlanWorkout(item) {
+  const syncMap = loadSyncMap();
+  const synced = syncMap[item.id];
+
   state.name = item.title.slice(0, 32);
   state.sport = 'running';
   state.steps = cloneSteps(item.steps);
   state.scheduleDate = item.date;
   state.pushToWatch = item.date === localDateISO();
+
+  state.editingPlanId = item.id;
+  state.editingWorkoutId = synced?.workoutId || null;
 
   render();
 
@@ -1497,19 +1509,21 @@ async function sendToGarmin() {
   try {
     const result = await postWorkout(
       {
+        workoutId: state.editingWorkoutId || null,
         name: state.name.trim(),
         sport: state.sport,
         steps: state.steps.map(({ id, ...s }) => s),
         scheduleDate: state.scheduleDate || null,
         pushToWatch: state.pushToWatch,
-      },
+      }  
       builderKey
     );
 
-    const parts = [
-      `Created Garmin workout <strong>${escapeHtml(result.workoutName || state.name)}</strong>`,
-    ];
-
+      const parts = [
+  result.updated
+    ? `Updated Garmin workout <strong>${escapeHtml(result.workoutName || state.name)}</strong>`
+    : `Created Garmin workout <strong>${escapeHtml(result.workoutName || state.name)}</strong>`,
+];
     if (result.workoutId) {
       parts.push(
         `ID ${escapeHtml(result.workoutId)}`
