@@ -1615,15 +1615,18 @@ async function sendToGarmin() {
     pushToWatch: state.pushToWatch,
   };
   const planItem = trainingPlan.find((item) => item.id === state.editingPlanId);
-  if (planItem) {
-    payload.planMeta = {
-      planId: planItem.id,
-      planName: planItem.custom ? "Custom Workouts" : "Great South Run",
-      sessionTitle: planItem.title,
-      workoutTitle: payload.name,
-      description: planItem.description,
-    };
-  }
+  const safeName = state.name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  payload.planMeta = {
+    planId: planItem?.id || `manual-${state.scheduleDate || localDateISO()}-${safeName}`,
+    planName: planItem?.custom ? "Custom Workouts" : "Great South Run",
+    sessionTitle: planItem?.title || state.name.trim(),
+    workoutTitle: payload.name,
+    description: planItem?.description || "Custom planned workout",
+  };
   setSyncBusy(true);
   showStatus("Saving workout to Garmin Connect…", "info");
   let message;
@@ -1703,3 +1706,4 @@ function exportFit() {
 }
 
 render();
+
