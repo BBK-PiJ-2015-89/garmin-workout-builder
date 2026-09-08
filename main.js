@@ -308,6 +308,7 @@ const state = {
   pushToWatch: true,
   editingPlanId: null,
   editingWorkoutId: null,
+  stravaUpdates: {},
 };
 
 function escapeHtml(value = "") {
@@ -367,6 +368,31 @@ function loadSyncMap() {
 
 function saveSyncMap(map) {
   localStorage.setItem("garminPlanSyncV1", JSON.stringify(map));
+}
+
+function sortedPlanItems() {
+  return [...trainingPlan].sort((a, b) => `${a.date}-${a.title}`.localeCompare(`${b.date}-${b.title}`));
+}
+
+async function fetchStravaUpdates() {
+  const builderKey = localStorage.getItem("garminBuilderKey") || "";
+  if (!builderKey) return;
+  try {
+    const response = await fetch("/api/plan-strava", { headers: { "x-builder-key": builderKey } });
+    const data = await response.json();
+    state.stravaUpdates = data.updates || {};
+  } catch {
+    state.stravaUpdates = {};
+  }
+}
+
+async function clearStravaUpdate(workoutId = "") {
+  const builderKey = getBuilderKey();
+  if (!builderKey) return;
+  const url = workoutId ? `/api/plan-strava?workoutId=${encodeURIComponent(workoutId)}` : "/api/plan-strava";
+  await fetch(url, { method: "DELETE", headers: { "x-builder-key": builderKey } });
+  await fetchStravaUpdates();
+  fetchStravaUpdates().finally(render);
 }
 
 function getBuilderKey() {
@@ -662,14 +688,16 @@ function planRows() {
   const syncMap = loadSyncMap();
   const today = localDateISO();
 
-  return trainingPlan
+  return sortedPlanItems()
     .map((item) => {
       const synced = syncMap[item.id];
       const past = item.date < today;
 
       let badge = item.type;
 
-      if (synced) badge = "✓ Garmin";
+      const stravaUpdated = synced?.workoutId && state.stravaUpdates[String(synced.workoutId)];
+      if (stravaUpdated) badge = "✓ Strava";
+      else if (synced) badge = "✓ Garmin";
       else if (item.race) badge = "Race";
       else if (past) badge = "Past";
 
@@ -696,11 +724,20 @@ function planRows() {
           </button>
         `;
 
+      const stravaButton = stravaUpdated
+        ? `
+          <button class="ghost plan-force-strava" data-workout-id="${escapeHtml(synced.workoutId)}">
+            Force Strava update
+          </button>
+        `
+        : "";
+
       const syncDetail = synced?.workoutId
         ? `
           <div class="plan-sync-detail">
             Garmin ID ${escapeHtml(synced.workoutId)}
             ${synced.scheduledDate ? ` · ${escapeHtml(synced.scheduledDate)}` : ""}
+            ${stravaUpdated ? " · Strava updated" : ""}
             ${synced.warning ? ` · ${escapeHtml(synced.warning)}` : ""}
           </div>
         `
@@ -727,6 +764,7 @@ function planRows() {
 
           <div class="plan-actions">
             ${syncButton}
+            ${stravaButton}
             ${loadButton}
           </div>
         </article>
@@ -867,6 +905,10 @@ function render() {
 
         <button class="ghost" id="clear-plan-sync">
           Clear plan sync history
+        </button>
+
+        <button class="ghost" id="clear-strava-updates">
+          Clear Strava update history
         </button>
 
         <button class="primary" id="sync-plan">
@@ -1111,6 +1153,12 @@ function clearPlanSyncHistory() {
 
 function bindEvents() {
   document.querySelector("#clear-plan-sync").addEventListener("click", clearPlanSyncHistory);
+  document.querySelector("#clear-strava-updates").addEventListener("click", async () => {
+    if (window.confirm("Clear all Strava update history? The next Hevy2Garmin sync may update matching Strava activities again.")) {
+      await clearStravaUpdate();
+      showPlanStatus("Strava update history cleared.", "success");
+    }
+  });
   document.querySelector("#workout-name").addEventListener("input", (e) => {
     state.name = e.target.value;
 
@@ -1218,6 +1266,13 @@ function bindEvents() {
       if (item) {
         loadPlanWorkout(item);
       }
+    });
+  });
+
+  document.querySelectorAll(".plan-force-strava").forEach((button) => {
+    button.addEventListener("click", async () => {
+      await clearStravaUpdate(button.dataset.workoutId);
+      showPlanStatus("Strava update marker cleared. Run Hevy2Garmin sync to force an update.", "success");
     });
   });
 
@@ -1705,5 +1760,5 @@ function exportFit() {
   }
 }
 
-render();
+fetchStravaUpdates().finally(render);
 
