@@ -1387,12 +1387,20 @@ async function postWorkout(payload, builderKey) {
 }
 
 function planPayload(item, pushToWatch = false) {
+  const name = planName(item).slice(0, 80);
   return {
-    name: planName(item).slice(0, 80),
+    name,
     sport: "running",
     steps: item.steps.map(({ id, ...s }) => s),
     scheduleDate: item.date,
     pushToWatch,
+    planMeta: {
+      planId: item.id,
+      planName: "Great South Run",
+      sessionTitle: item.title,
+      workoutTitle: name,
+      description: item.description,
+    },
   };
 }
 
@@ -1552,6 +1560,16 @@ async function sendToGarmin() {
     scheduleDate: state.editingWorkoutId ? null : state.scheduleDate || null,
     pushToWatch: state.pushToWatch,
   };
+  const planItem = trainingPlan.find((item) => item.id === state.editingPlanId);
+  if (planItem) {
+    payload.planMeta = {
+      planId: planItem.id,
+      planName: "Great South Run",
+      sessionTitle: planItem.title,
+      workoutTitle: payload.name,
+      description: planItem.description,
+    };
+  }
   setSyncBusy(true);
   showStatus("Saving workout to Garmin Connect…", "info");
   let message;
@@ -1560,8 +1578,7 @@ async function sendToGarmin() {
     const result = await postWorkout(payload, builderKey);
     state.editingWorkoutId = result.workoutId;
     if (!result.updated) state.scheduleDate = result.scheduledDate || "";
-    const item = trainingPlan.find((item) => item.id === state.editingPlanId);
-    if (item) rememberWorkout(item, result, payload);
+    if (planItem) rememberWorkout(planItem, result, payload);
     const parts = [
       `${result.updated ? "Updated" : "Created"} <strong>${escapeHtml(result.workoutName || payload.name)}</strong>`,
       `ID ${escapeHtml(result.workoutId)}`,

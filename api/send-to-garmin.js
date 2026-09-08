@@ -1,4 +1,5 @@
 import { GarminAuth, DBTokenStore } from "garmin-auth";
+import pg from "pg";
 
 const SPORT_RUNNING = { sportTypeId: 1, sportTypeKey: "running" };
 const NO_TARGET = { workoutTargetTypeId: 1, workoutTargetTypeKey: "no.target" };
@@ -166,6 +167,72 @@ function buildWorkout(body) {
 
 function databaseUrl() {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
+}
+
+let pool;
+
+function getPool() {
+  const url = databaseUrl();
+  if (!url) return null;
+  if (!pool) pool = new pg.Pool({ connectionString: url });
+  return pool;
+}
+
+function cleanPlanMeta(body) {
+  const meta = body?.planMeta;
+  if (!meta || typeof meta !== "object") return null;
+  const planId = String(meta.planId || body.name || "").trim().slice(0, 120);
+  const workoutTitle = String(meta.workoutTitle || body.name || "").trim().slice(0, 120);
+  if (!planId || !workoutTitle) return null;
+  return {
+    planId,
+    planName: String(meta.planName || "Training Plan").trim().slice(0, 120),
+    sessionTitle: String(meta.sessionTitle || workoutTitle).trim().slice(0, 120),
+    workoutTitle,
+    description: String(meta.description || "").trim().slice(0, 1000),
+  };
+}
+
+async function rememberPlannedWorkout(body, workoutId, workoutName, scheduledDate) {
+  const meta = cleanPlanMeta(body);
+  if (!meta) return;
+  const db = getPool();
+  if (!db) return;
+
+  await db.query(
+    `CREATE TABLE IF NOT EXISTS app_cache (
+       key TEXT PRIMARY KEY,
+       value JSONB NOT NULL,
+       updated_at TIMESTAMPTZ DEFAULT NOW()
+     )`,
+  );
+  const current = await db.query(
+    "SELECT value FROM app_cache WHERE key = $1 LIMIT 1",
+    ["planned_workouts"],
+  );
+  const value =
+    current.rows[0]?.value && typeof current.rows[0].value === "object"
+      ? current.rows[0].value
+      : {};
+  const workouts =
+    value.workouts && typeof value.workouts === "object" ? value.workouts : {};
+  workouts[String(workoutId)] = {
+    ...meta,
+    garminWorkoutId: String(workoutId),
+    workoutTitle: workoutName,
+    sport: body.sport || "running",
+    scheduledDate: scheduledDate || body.scheduleDate || null,
+    steps: Array.isArray(body.steps) ? body.steps : [],
+    updatedAt: new Date().toISOString(),
+  };
+
+  await db.query(
+    `INSERT INTO app_cache (key, value, updated_at)
+     VALUES ($1, $2::jsonb, NOW())
+     ON CONFLICT (key) DO UPDATE
+       SET value = EXCLUDED.value, updated_at = NOW()`,
+    ["planned_workouts", JSON.stringify({ ...value, workouts })],
+  );
 }
 
 async function garminClient() {
@@ -340,6 +407,21 @@ export default async function handler(req, res) {
         };
       }
     }
+    let planRegistry = { saved: false };
+    try {
+      await rememberPlannedWorkout(
+        req.body,
+        workoutId,
+        workout.workoutName,
+        scheduledDate,
+      );
+      planRegistry = { saved: Boolean(cleanPlanMeta(req.body)) };
+    } catch (error) {
+      planRegistry = {
+        saved: false,
+        warning: `Workout saved, but the shared plan record could not be updated: ${error.message || error}`,
+      };
+    }
     return json(res, 200, {
       ok: true,
       updated,
@@ -349,6 +431,7 @@ export default async function handler(req, res) {
       schedulePreserved: updated,
       warning,
       devicePush,
+      planRegistry,
     });
   } catch (error) {
     console.error("send-to-garmin failed", error);
