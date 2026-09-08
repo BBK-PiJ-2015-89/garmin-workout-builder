@@ -242,6 +242,7 @@ const trainingPlan = [
 ];
 
 const CUSTOM_PLAN_KEY = "garminCustomWorkoutsV1";
+const PLAN_EDIT_KEY = "garminPlanEditsV1";
 const HIDDEN_PLAN_KEY = "garminHiddenWorkoutsV1";
 
 function loadCustomWorkouts() {
@@ -255,6 +256,19 @@ function loadCustomWorkouts() {
 
 function saveCustomWorkouts(items) {
   localStorage.setItem(CUSTOM_PLAN_KEY, JSON.stringify(items));
+}
+
+function loadPlanEdits() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLAN_EDIT_KEY) || "{}");
+    return saved && typeof saved === "object" ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
+function savePlanEdits(edits) {
+  localStorage.setItem(PLAN_EDIT_KEY, JSON.stringify(edits));
 }
 
 trainingPlan.push(...loadCustomWorkouts());
@@ -410,8 +424,11 @@ function sharedPlanItems() {
 function currentPlanItems() {
   const ids = customIds();
   const hidden = loadHiddenPlanIds();
+  const edits = loadPlanEdits();
   return [
-    ...trainingPlan.filter((item) => (!item.custom || ids.has(item.id)) && !hidden.has(item.id)),
+    ...trainingPlan
+      .filter((item) => (!item.custom || ids.has(item.id)) && !hidden.has(item.id))
+      .map((item) => (edits[item.id] ? { ...item, ...edits[item.id], steps: cloneSteps(edits[item.id].steps || item.steps) } : item)),
     ...sharedPlanItems(),
   ];
 }
@@ -1212,21 +1229,34 @@ function saveCurrentWorkoutToList() {
   }
   const existingPlan = trainingPlan.find((existing) => existing.id === state.editingPlanId);
   const existingSync = state.editingPlanId ? loadSyncMap()[state.editingPlanId] : null;
+  const editingExisting = existingPlan && !existingPlan.sharedOnly;
   const item = {
-    id: existingPlan?.custom ? existingPlan.id : `custom-${Date.now()}`,
+    id: editingExisting ? existingPlan.id : `custom-${Date.now()}`,
     date: state.scheduleDate || existingSync?.scheduledDate || localDateISO(),
-    type: "Custom",
+    type: existingPlan?.type || "Custom",
     title: state.name.trim(),
     description: existingPlan?.description || "Custom planned workout",
     sync: true,
-    custom: true,
+    custom: existingPlan?.custom || !editingExisting,
     steps: cloneSteps(state.steps),
   };
-  const custom = loadCustomWorkouts().filter((existing) => existing.id !== item.id);
-  custom.push(item);
-  saveCustomWorkouts(custom);
+  if (existingPlan?.custom || !editingExisting) {
+    const custom = loadCustomWorkouts().filter((existing) => existing.id !== item.id);
+    custom.push(item);
+    saveCustomWorkouts(custom);
+  } else {
+    const edits = loadPlanEdits();
+    edits[item.id] = {
+      date: item.date,
+      title: item.title,
+      description: item.description,
+      sync: item.sync,
+      steps: cloneSteps(item.steps),
+    };
+    savePlanEdits(edits);
+  }
   const existingIndex = trainingPlan.findIndex((existing) => existing.id === item.id);
-  if (existingIndex >= 0) trainingPlan[existingIndex] = item;
+  if (existingIndex >= 0) trainingPlan[existingIndex] = { ...trainingPlan[existingIndex], ...item };
   else trainingPlan.push(item);
   state.editingPlanId = item.id;
   state.editingWorkoutId = existingSync?.workoutId || state.editingWorkoutId || null;
@@ -1243,6 +1273,7 @@ function clearPlanSyncHistory() {
 
   try {
     localStorage.removeItem("garminPlanSyncV1");
+    localStorage.removeItem(PLAN_EDIT_KEY);
     state.editingPlanId = null;
     state.editingWorkoutId = null;
     render();
