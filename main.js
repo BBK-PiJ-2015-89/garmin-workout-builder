@@ -404,11 +404,11 @@ function customIds() {
 }
 
 function sharedPlanItems() {
-  const localIds = new Set(trainingPlan.map((item) => item.id));
   return Object.entries(state.sharedPlans || {})
-    .filter(([workoutId, plan]) => plan && !localIds.has(plan.planId || `shared-${workoutId}`))
+    .filter(([, plan]) => plan)
     .map(([workoutId, plan]) => ({
-      id: plan.planId || `shared-${workoutId}`,
+      id: `shared-${workoutId}`,
+      sourcePlanId: plan.planId || "",
       date: plan.scheduledDate || localDateISO(),
       type: "Shared",
       title: plan.sessionTitle || plan.workoutTitle || "Shared planned workout",
