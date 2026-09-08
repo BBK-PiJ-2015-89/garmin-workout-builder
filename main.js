@@ -3,13 +3,244 @@ import { Encoder, Profile } from '@garmin/fitsdk';
 
 const uid = () => crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
 
+const step = (name, intensity, durationType, durationValue, targetType = 'open', targetLow = '', targetHigh = '') => ({
+  id: uid(),
+  kind: 'step',
+  name,
+  intensity,
+  durationType,
+  durationValue,
+  targetType,
+  targetLow,
+  targetHigh,
+});
+
+const repeat = (previousSteps, reps) => ({
+  id: uid(),
+  kind: 'repeat',
+  name: 'Repeat',
+  previousSteps,
+  reps,
+});
+
 const initialSteps = [
-  { id: uid(), kind: 'step', name: 'Warm up', intensity: 'warmup', durationType: 'distance', durationValue: 2000, targetType: 'open', targetLow: '', targetHigh: '' },
-  { id: uid(), kind: 'step', name: 'Tempo', intensity: 'active', durationType: 'distance', durationValue: 1000, targetType: 'pace', targetLow: '4:35', targetHigh: '4:45' },
-  { id: uid(), kind: 'step', name: 'Easy', intensity: 'recovery', durationType: 'time', durationValue: 120, targetType: 'open', targetLow: '', targetHigh: '' },
-  { id: uid(), kind: 'repeat', name: 'Repeat', previousSteps: 2, reps: 4 },
-  { id: uid(), kind: 'step', name: 'Cool down', intensity: 'cooldown', durationType: 'distance', durationValue: 1500, targetType: 'open', targetLow: '', targetHigh: '' },
+  step('Warm up', 'warmup', 'distance', 2000),
+  step('Tempo', 'active', 'distance', 1000, 'pace', '4:35', '4:45'),
+  step('Easy', 'recovery', 'time', 120),
+  repeat(2, 4),
+  step('Cool down', 'cooldown', 'distance', 1500),
 ];
+
+const trainingPlan = [
+  {
+    id: 'gsr-2026-09-08-quality',
+    date: '2026-09-08',
+    type: 'Structured',
+    title: 'Great South Run Session',
+    description: '2 km warm-up, 4 × 1 km at 4:35–4:45/km with 2 min easy recovery, 1.5 km cool-down.',
+    sync: true,
+    steps: [
+      step('Warm up', 'warmup', 'distance', 2000),
+      step('Tempo', 'active', 'distance', 1000, 'pace', '4:35', '4:45'),
+      step('Easy', 'recovery', 'time', 120),
+      repeat(2, 4),
+      step('Cool down', 'cooldown', 'distance', 1500),
+    ],
+  },
+  {
+    id: 'gsr-2026-09-11-club',
+    date: '2026-09-11',
+    type: 'Club',
+    title: 'Club run',
+    description: '8–10 km steady with the club. Keep it controlled rather than turning it into a race.',
+    sync: false,
+    steps: [step('Steady run', 'active', 'distance', 10000)],
+  },
+  {
+    id: 'gsr-2026-09-13-long',
+    date: '2026-09-13',
+    type: 'Structured',
+    title: 'Long easy 12 km',
+    description: 'A relaxed 12 km aerobic run. The aim is time on feet, not pace.',
+    sync: true,
+    steps: [
+      step('Settle in', 'warmup', 'distance', 2000),
+      step('Easy aerobic', 'active', 'distance', 8000),
+      step('Easy finish', 'cooldown', 'distance', 2000),
+    ],
+  },
+  {
+    id: 'gsr-2026-09-15-club',
+    date: '2026-09-15',
+    type: 'Club',
+    title: 'Club run',
+    description: 'Around 10 km at normal club pace. Keep enough in reserve for the weekend session.',
+    sync: false,
+    steps: [step('Club run', 'active', 'distance', 10000)],
+  },
+  {
+    id: 'gsr-2026-09-18-club',
+    date: '2026-09-18',
+    type: 'Club',
+    title: 'Club run',
+    description: '8–10 km steady. Ease back if the legs still feel loaded.',
+    sync: false,
+    steps: [step('Club run', 'active', 'distance', 9000)],
+  },
+  {
+    id: 'gsr-2026-09-20-progression',
+    date: '2026-09-20',
+    type: 'Structured',
+    title: '13 km progression',
+    description: '3 km easy, 6 km steady at 5:00–5:15/km, 2 km at 4:35–4:45/km, then 2 km easy.',
+    sync: true,
+    steps: [
+      step('Easy start', 'warmup', 'distance', 3000),
+      step('Steady', 'active', 'distance', 6000, 'pace', '5:00', '5:15'),
+      step('10-mile effort', 'active', 'distance', 2000, 'pace', '4:35', '4:45'),
+      step('Easy finish', 'cooldown', 'distance', 2000),
+    ],
+  },
+  {
+    id: 'gsr-2026-09-22-club',
+    date: '2026-09-22',
+    type: 'Club',
+    title: 'Club run',
+    description: 'Around 10 km steady with the club.',
+    sync: false,
+    steps: [step('Club run', 'active', 'distance', 10000)],
+  },
+  {
+    id: 'gsr-2026-09-25-club',
+    date: '2026-09-25',
+    type: 'Club',
+    title: 'Club run',
+    description: '8–10 km controlled. Avoid a hard finish this week.',
+    sync: false,
+    steps: [step('Club run', 'active', 'distance', 9000)],
+  },
+  {
+    id: 'gsr-2026-09-27-2k-reps',
+    date: '2026-09-27',
+    type: 'Structured',
+    title: '3 × 2 km',
+    description: '2 km warm-up, 3 × 2 km at 4:30–4:40/km with 3 min recovery, 2 km cool-down.',
+    sync: true,
+    steps: [
+      step('Warm up', 'warmup', 'distance', 2000),
+      step('2 km rep', 'active', 'distance', 2000, 'pace', '4:30', '4:40'),
+      step('Recovery', 'recovery', 'time', 180),
+      repeat(2, 3),
+      step('Cool down', 'cooldown', 'distance', 2000),
+    ],
+  },
+  {
+    id: 'gsr-2026-09-29-club',
+    date: '2026-09-29',
+    type: 'Club',
+    title: 'Club run',
+    description: 'Around 10 km steady.',
+    sync: false,
+    steps: [step('Club run', 'active', 'distance', 10000)],
+  },
+  {
+    id: 'gsr-2026-10-02-club',
+    date: '2026-10-02',
+    type: 'Club',
+    title: 'Club run',
+    description: '8–10 km controlled ahead of the final long run.',
+    sync: false,
+    steps: [step('Club run', 'active', 'distance', 9000)],
+  },
+  {
+    id: 'gsr-2026-10-04-long',
+    date: '2026-10-04',
+    type: 'Structured',
+    title: '15 km long run',
+    description: '11 km relaxed followed by 4 km at 4:45–4:55/km. Last substantial long run before taper.',
+    sync: true,
+    steps: [
+      step('Easy start', 'warmup', 'distance', 2000),
+      step('Easy aerobic', 'active', 'distance', 9000),
+      step('Strong finish', 'active', 'distance', 4000, 'pace', '4:45', '4:55'),
+    ],
+  },
+  {
+    id: 'gsr-2026-10-06-club',
+    date: '2026-10-06',
+    type: 'Club',
+    title: 'Club run',
+    description: '8–10 km easy to steady. Taper starts here.',
+    sync: false,
+    steps: [step('Club run', 'active', 'distance', 9000)],
+  },
+  {
+    id: 'gsr-2026-10-09-club',
+    date: '2026-10-09',
+    type: 'Club',
+    title: 'Easy club run',
+    description: 'About 8 km, deliberately comfortable.',
+    sync: false,
+    steps: [step('Easy club run', 'active', 'distance', 8000)],
+  },
+  {
+    id: 'gsr-2026-10-11-800s',
+    date: '2026-10-11',
+    type: 'Structured',
+    title: '6 × 800 m taper session',
+    description: '2 km warm-up, 6 × 800 m at 4:20–4:30/km with 90 sec easy recovery, 2 km cool-down.',
+    sync: true,
+    steps: [
+      step('Warm up', 'warmup', 'distance', 2000),
+      step('800 m rep', 'active', 'distance', 800, 'pace', '4:20', '4:30'),
+      step('Recovery', 'recovery', 'time', 90),
+      repeat(2, 6),
+      step('Cool down', 'cooldown', 'distance', 2000),
+    ],
+  },
+  {
+    id: 'gsr-2026-10-13-club',
+    date: '2026-10-13',
+    type: 'Club',
+    title: 'Easy club run',
+    description: '6–8 km easy. Finish feeling fresher than you started.',
+    sync: false,
+    steps: [step('Easy run', 'active', 'distance', 7000)],
+  },
+  {
+    id: 'gsr-2026-10-16-tune',
+    date: '2026-10-16',
+    type: 'Structured',
+    title: 'Race tune-up',
+    description: 'Short easy run with 4 × 20 sec relaxed strides. Keep this light.',
+    sync: true,
+    steps: [
+      step('Easy run', 'warmup', 'distance', 4000),
+      step('Stride', 'active', 'time', 20),
+      step('Easy', 'recovery', 'time', 60),
+      repeat(2, 4),
+      step('Easy finish', 'cooldown', 'distance', 1000),
+    ],
+  },
+  {
+    id: 'gsr-2026-10-18-race',
+    date: '2026-10-18',
+    type: 'Race',
+    title: 'Great South Run',
+    description: 'Race day: 10 miles / 16.1 km. No structured workout is auto-scheduled for the race itself.',
+    sync: false,
+    race: true,
+    steps: [],
+  },
+];
+
+const seededSync = {
+  'gsr-2026-09-08-quality': {
+    workoutId: 1691732433,
+    workoutName: 'Great South Run Session',
+    scheduledDate: '2026-09-08',
+  },
+};
 
 const state = {
   name: 'Great South Run Session',
@@ -28,12 +259,82 @@ function escapeHtml(value = '') {
     .replaceAll("'", '&#039;');
 }
 
+function cloneSteps(steps) {
+  return structuredClone(steps).map(s => ({ ...s, id: uid() }));
+}
+
+function localDateISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function formatDate(value) {
+  const [y, m, d] = value.split('-').map(Number);
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(new Date(y, m - 1, d));
+}
+
+function loadSyncMap() {
+  let saved = {};
+
+  try {
+    saved = JSON.parse(localStorage.getItem('garminPlanSyncV1') || '{}') || {};
+  } catch {
+    saved = {};
+  }
+
+  let changed = false;
+
+  for (const [id, value] of Object.entries(seededSync)) {
+    if (!saved[id]) {
+      saved[id] = value;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    localStorage.setItem('garminPlanSyncV1', JSON.stringify(saved));
+  }
+
+  return saved;
+}
+
+function saveSyncMap(map) {
+  localStorage.setItem('garminPlanSyncV1', JSON.stringify(map));
+}
+
+function getBuilderKey() {
+  let builderKey = localStorage.getItem('garminBuilderKey') || '';
+
+  if (!builderKey) {
+    builderKey = window.prompt(
+      'Enter your Garmin Workout Builder key. This is the GARMIN_BUILDER_KEY you set in Vercel.'
+    );
+
+    if (!builderKey) return '';
+
+    localStorage.setItem('garminBuilderKey', builderKey);
+  }
+
+  return builderKey;
+}
+
 function parsePace(value) {
   const match = String(value).trim().match(/^(\d{1,2}):(\d{2})$/);
+
   if (!match) return null;
+
   const minutes = Number(match[1]);
   const seconds = Number(match[2]);
+
   if (seconds > 59) return null;
+
   return minutes * 60 + seconds;
 }
 
@@ -42,132 +343,504 @@ function paceToSpeed(pace) {
   return secondsPerKm ? 1000 / secondsPerKm : null;
 }
 
-function formatDuration(step) {
-  if (step.durationType === 'open') return 'Lap button';
-  if (step.durationType === 'distance') {
-    return step.durationValue >= 1000
-      ? `${(step.durationValue / 1000).toFixed(step.durationValue % 1000 ? 1 : 0)} km`
-      : `${step.durationValue} m`;
+function formatDuration(s) {
+  if (s.durationType === 'open') return 'Lap button';
+
+  if (s.durationType === 'distance') {
+    return s.durationValue >= 1000
+      ? `${(s.durationValue / 1000).toFixed(s.durationValue % 1000 ? 1 : 0)} km`
+      : `${s.durationValue} m`;
   }
-  const mins = Math.floor(step.durationValue / 60);
-  const secs = step.durationValue % 60;
+
+  const mins = Math.floor(s.durationValue / 60);
+  const secs = s.durationValue % 60;
+
   return mins ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`;
 }
 
-function formatTarget(step) {
-  if (step.targetType === 'pace') return `${step.targetLow || '?'} to ${step.targetHigh || '?'} /km`;
-  if (step.targetType === 'heartRate') return `${step.targetLow || '?'} to ${step.targetHigh || '?'} bpm`;
+function formatTarget(s) {
+  if (s.targetType === 'pace') {
+    return `${s.targetLow || '?'} to ${s.targetHigh || '?'} /km`;
+  }
+
+  if (s.targetType === 'heartRate') {
+    return `${s.targetLow || '?'} to ${s.targetHigh || '?'} bpm`;
+  }
+
   return 'No target';
 }
 
-function stepCard(step, index) {
-  if (step.kind === 'repeat') {
+function stepCard(s, index) {
+  if (s.kind === 'repeat') {
     return `
-      <article class="step-card repeat-card" data-id="${step.id}">
+      <article class="step-card repeat-card" data-id="${s.id}">
         <div class="step-number">${index + 1}</div>
+
         <div class="step-grid repeat-grid">
-          <label>Repeat previous
-            <input data-field="previousSteps" type="number" min="1" max="${Math.max(1, index)}" value="${step.previousSteps}">
+          <label>
+            Repeat previous
+            <input
+              data-field="previousSteps"
+              type="number"
+              min="1"
+              max="${Math.max(1, index)}"
+              value="${s.previousSteps}"
+            >
             <span class="suffix">steps</span>
           </label>
-          <label>Number of times
-            <input data-field="reps" type="number" min="2" max="99" value="${step.reps}">
+
+          <label>
+            Number of times
+            <input
+              data-field="reps"
+              type="number"
+              min="2"
+              max="99"
+              value="${s.reps}"
+            >
           </label>
         </div>
-        <button class="icon-btn danger" data-action="delete" aria-label="Delete repeat">×</button>
-      </article>`;
+
+        <button
+          class="icon-btn danger"
+          data-action="delete"
+          aria-label="Delete repeat"
+        >×</button>
+      </article>
+    `;
   }
 
   return `
-    <article class="step-card" data-id="${step.id}">
+    <article class="step-card" data-id="${s.id}">
       <div class="step-number">${index + 1}</div>
+
       <div class="step-grid">
-        <label class="wide">Step name
-          <input data-field="name" type="text" maxlength="32" value="${escapeHtml(step.name)}">
+        <label class="wide">
+          Step name
+          <input
+            data-field="name"
+            type="text"
+            maxlength="32"
+            value="${escapeHtml(s.name)}"
+          >
         </label>
-        <label>Intensity
+
+        <label>
+          Intensity
           <select data-field="intensity">
-            ${['warmup','active','recovery','rest','cooldown'].map(v => `<option value="${v}" ${step.intensity === v ? 'selected' : ''}>${v[0].toUpperCase() + v.slice(1)}</option>`).join('')}
+            ${['warmup', 'active', 'recovery', 'rest', 'cooldown']
+              .map(v => `
+                <option
+                  value="${v}"
+                  ${s.intensity === v ? 'selected' : ''}
+                >
+                  ${v[0].toUpperCase() + v.slice(1)}
+                </option>
+              `)
+              .join('')}
           </select>
         </label>
-        <label>Duration
+
+        <label>
+          Duration
           <select data-field="durationType">
-            <option value="distance" ${step.durationType === 'distance' ? 'selected' : ''}>Distance</option>
-            <option value="time" ${step.durationType === 'time' ? 'selected' : ''}>Time</option>
-            <option value="open" ${step.durationType === 'open' ? 'selected' : ''}>Until lap press</option>
+            <option value="distance" ${s.durationType === 'distance' ? 'selected' : ''}>
+              Distance
+            </option>
+            <option value="time" ${s.durationType === 'time' ? 'selected' : ''}>
+              Time
+            </option>
+            <option value="open" ${s.durationType === 'open' ? 'selected' : ''}>
+              Until lap press
+            </option>
           </select>
         </label>
-        ${step.durationType === 'open' ? '' : `
-          <label>${step.durationType === 'distance' ? 'Metres' : 'Seconds'}
-            <input data-field="durationValue" type="number" min="1" step="1" value="${step.durationValue}">
-          </label>`}
-        <label>Target
+
+        ${s.durationType === 'open'
+          ? ''
+          : `
+            <label>
+              ${s.durationType === 'distance' ? 'Metres' : 'Seconds'}
+              <input
+                data-field="durationValue"
+                type="number"
+                min="1"
+                step="1"
+                value="${s.durationValue}"
+              >
+            </label>
+          `
+        }
+
+        <label>
+          Target
           <select data-field="targetType">
-            <option value="open" ${step.targetType === 'open' ? 'selected' : ''}>No target</option>
-            <option value="pace" ${step.targetType === 'pace' ? 'selected' : ''}>Pace</option>
-            <option value="heartRate" ${step.targetType === 'heartRate' ? 'selected' : ''}>Heart rate</option>
+            <option value="open" ${s.targetType === 'open' ? 'selected' : ''}>
+              No target
+            </option>
+            <option value="pace" ${s.targetType === 'pace' ? 'selected' : ''}>
+              Pace
+            </option>
+            <option value="heartRate" ${s.targetType === 'heartRate' ? 'selected' : ''}>
+              Heart rate
+            </option>
           </select>
         </label>
-        ${step.targetType === 'pace' ? `
-          <label>Fast pace
-            <input data-field="targetLow" type="text" inputmode="numeric" placeholder="4:30" value="${escapeHtml(step.targetLow)}">
-          </label>
-          <label>Slow pace
-            <input data-field="targetHigh" type="text" inputmode="numeric" placeholder="4:45" value="${escapeHtml(step.targetHigh)}">
-          </label>` : ''}
-        ${step.targetType === 'heartRate' ? `
-          <label>HR low
-            <input data-field="targetLow" type="number" min="40" max="220" value="${escapeHtml(step.targetLow)}">
-          </label>
-          <label>HR high
-            <input data-field="targetHigh" type="number" min="40" max="220" value="${escapeHtml(step.targetHigh)}">
-          </label>` : ''}
+
+        ${s.targetType === 'pace'
+          ? `
+            <label>
+              Fast pace
+              <input
+                data-field="targetLow"
+                type="text"
+                inputmode="numeric"
+                placeholder="4:30"
+                value="${escapeHtml(s.targetLow)}"
+              >
+            </label>
+
+            <label>
+              Slow pace
+              <input
+                data-field="targetHigh"
+                type="text"
+                inputmode="numeric"
+                placeholder="4:45"
+                value="${escapeHtml(s.targetHigh)}"
+              >
+            </label>
+          `
+          : ''
+        }
+
+        ${s.targetType === 'heartRate'
+          ? `
+            <label>
+              HR low
+              <input
+                data-field="targetLow"
+                type="number"
+                min="40"
+                max="220"
+                value="${escapeHtml(s.targetLow)}"
+              >
+            </label>
+
+            <label>
+              HR high
+              <input
+                data-field="targetHigh"
+                type="number"
+                min="40"
+                max="220"
+                value="${escapeHtml(s.targetHigh)}"
+              >
+            </label>
+          `
+          : ''
+        }
       </div>
+
       <div class="step-actions">
-        <button class="icon-btn" data-action="up" ${index === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
-        <button class="icon-btn" data-action="down" ${index === state.steps.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
-        <button class="icon-btn danger" data-action="delete" aria-label="Delete step">×</button>
+        <button
+          class="icon-btn"
+          data-action="up"
+          ${index === 0 ? 'disabled' : ''}
+          aria-label="Move up"
+        >↑</button>
+
+        <button
+          class="icon-btn"
+          data-action="down"
+          ${index === state.steps.length - 1 ? 'disabled' : ''}
+          aria-label="Move down"
+        >↓</button>
+
+        <button
+          class="icon-btn danger"
+          data-action="delete"
+          aria-label="Delete step"
+        >×</button>
       </div>
-    </article>`;
+    </article>
+  `;
 }
 
 function summaryRows() {
-  return state.steps.map((step, index) => {
-    if (step.kind === 'repeat') {
-      return `<div class="summary-row"><span>${index + 1}</span><strong>Repeat</strong><span>Previous ${step.previousSteps} steps × ${step.reps}</span></div>`;
-    }
-    return `<div class="summary-row"><span>${index + 1}</span><strong>${escapeHtml(step.name || 'Step')}</strong><span>${formatDuration(step)} · ${formatTarget(step)}</span></div>`;
-  }).join('');
+  return state.steps
+    .map((s, index) => {
+      if (s.kind === 'repeat') {
+        return `
+          <div class="summary-row">
+            <span>${index + 1}</span>
+            <strong>Repeat</strong>
+            <span>Previous ${s.previousSteps} steps × ${s.reps}</span>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="summary-row">
+          <span>${index + 1}</span>
+          <strong>${escapeHtml(s.name || 'Step')}</strong>
+          <span>${formatDuration(s)} · ${formatTarget(s)}</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function planRows() {
+  const syncMap = loadSyncMap();
+  const today = localDateISO();
+
+  return trainingPlan
+    .map(item => {
+      const synced = syncMap[item.id];
+      const past = item.date < today;
+
+      let badge = item.type;
+
+      if (synced) badge = '✓ Garmin';
+      else if (item.race) badge = 'Race';
+      else if (past) badge = 'Past';
+
+      const syncButton = item.sync
+        ? `
+          <button
+            class="secondary plan-sync-one"
+            data-plan-id="${item.id}"
+            ${synced ? 'disabled' : ''}
+          >
+            ${synced ? 'Synced' : 'Sync to Garmin'}
+          </button>
+        `
+        : '';
+
+      const loadButton = item.race
+        ? ''
+        : `
+          <button
+            class="ghost plan-load"
+            data-plan-id="${item.id}"
+          >
+            Load in builder
+          </button>
+        `;
+
+      const syncDetail = synced?.workoutId
+        ? `
+          <div class="plan-sync-detail">
+            Garmin ID ${escapeHtml(synced.workoutId)}
+            ${synced.scheduledDate ? ` · ${escapeHtml(synced.scheduledDate)}` : ''}
+          </div>
+        `
+        : '';
+
+      return `
+        <article class="plan-row ${item.type.toLowerCase()} ${past ? 'past' : ''}">
+          <div class="plan-date">
+            ${escapeHtml(formatDate(item.date))}
+          </div>
+
+          <div class="plan-main">
+            <div class="plan-title-line">
+              <strong>${escapeHtml(item.title)}</strong>
+              <span class="plan-badge">${escapeHtml(badge)}</span>
+            </div>
+
+            <div class="plan-description">
+              ${escapeHtml(item.description)}
+            </div>
+
+            ${syncDetail}
+          </div>
+
+          <div class="plan-actions">
+            ${syncButton}
+            ${loadButton}
+          </div>
+        </article>
+      `;
+    })
+    .join('');
 }
 
 function render() {
   document.querySelector('#app').innerHTML = `
+    <style>
+      .plan-panel {
+        margin: 24px auto;
+      }
+
+      .plan-toolbar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin: 16px 0;
+      }
+
+      .plan-toolbar p {
+        margin: 0;
+        max-width: 720px;
+      }
+
+      .plan-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .plan-row {
+        display: grid;
+        grid-template-columns: 110px minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        padding: 14px 16px;
+        border: 1px solid rgba(127, 127, 127, .22);
+        border-radius: 12px;
+      }
+
+      .plan-row.past {
+        opacity: .72;
+      }
+
+      .plan-date {
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .plan-title-line {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .plan-description {
+        margin-top: 4px;
+        opacity: .78;
+        line-height: 1.4;
+      }
+
+      .plan-badge {
+        font-size: .78rem;
+        border: 1px solid rgba(127, 127, 127, .3);
+        border-radius: 999px;
+        padding: 2px 8px;
+        white-space: nowrap;
+      }
+
+      .plan-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .plan-sync-detail {
+        font-size: .78rem;
+        opacity: .65;
+        margin-top: 5px;
+      }
+
+      .plan-status {
+        margin: 12px 0;
+      }
+
+      @media (max-width: 760px) {
+        .plan-row {
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+
+        .plan-actions {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+
     <header class="hero">
       <div class="shell hero-inner">
         <div>
-          <div class="eyebrow">FIT WORKOUT TOOL</div>
-          <h1>Garmin Workout Builder</h1>
-          <p>Build structured running sessions and export a Garmin-compatible <code>.FIT</code> workout file.</p>
+          <div class="eyebrow">GARMIN TRAINING PLAN</div>
+          <h1>Great South Run Plan</h1>
+          <p>
+            Your running schedule through 18 October, with structured sessions
+            ready to schedule into Garmin Connect.
+          </p>
         </div>
-        <div class="fit-badge">FIT<br><small>21.214</small></div>
+
+        <div class="fit-badge">
+          FIT<br>
+          <small>21.214</small>
+        </div>
       </div>
     </header>
+
+    <section class="shell panel plan-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Training schedule</h2>
+          <p>
+            Two normal club runs each week plus one targeted session.
+            Only the structured sessions are bulk-scheduled to Garmin.
+          </p>
+        </div>
+      </div>
+
+      <div class="plan-toolbar">
+        <p class="hint">
+          “Sync all upcoming” skips sessions already recorded as synced on this
+          browser, so pressing it again will not recreate those workouts.
+        </p>
+
+        <button class="primary" id="sync-plan">
+          Sync all upcoming workouts
+        </button>
+      </div>
+
+      <div
+        id="plan-status"
+        class="status plan-status"
+        hidden
+      ></div>
+
+      <div class="plan-list">
+        ${planRows()}
+      </div>
+    </section>
 
     <main class="shell layout">
       <section class="panel builder">
         <div class="panel-heading">
           <div>
-            <h2>Workout</h2>
-            <p>Configure the session Garmin will show step-by-step on the watch.</p>
+            <h2>Workout builder</h2>
+            <p>
+              Load a planned session above to inspect or adjust it,
+              or build something completely different.
+            </p>
           </div>
         </div>
 
         <div class="workout-meta">
-          <label>Workout name
-            <input id="workout-name" type="text" maxlength="32" value="${escapeHtml(state.name)}">
+          <label>
+            Workout name
+            <input
+              id="workout-name"
+              type="text"
+              maxlength="32"
+              value="${escapeHtml(state.name)}"
+            >
           </label>
-          <label>Sport
-            <select id="sport"><option value="running">Running</option></select>
+
+          <label>
+            Sport
+            <select id="sport">
+              <option value="running">Running</option>
+            </select>
           </label>
         </div>
 
@@ -176,56 +849,136 @@ function render() {
         </div>
 
         <div class="add-row">
-          <button class="secondary" id="add-step">+ Add step</button>
-          <button class="secondary" id="add-repeat">↻ Add repeat</button>
+          <button class="secondary" id="add-step">
+            + Add step
+          </button>
+
+          <button class="secondary" id="add-repeat">
+            ↻ Add repeat
+          </button>
         </div>
       </section>
 
       <aside class="panel summary-panel">
         <div class="sticky">
           <div class="eyebrow">PREVIEW</div>
+
           <h2>${escapeHtml(state.name)}</h2>
-          <div class="summary-list">${summaryRows()}</div>
+
+          <div class="summary-list">
+            ${summaryRows()}
+          </div>
+
           <div class="garmin-options">
-            <label>Schedule date <span class="muted">(optional)</span>
-              <input id="schedule-date" type="date" value="${escapeHtml(state.scheduleDate)}">
+            <label>
+              Schedule date
+              <span class="muted">(optional)</span>
+              <input
+                id="schedule-date"
+                type="date"
+                value="${escapeHtml(state.scheduleDate)}"
+              >
             </label>
+
             <label class="check-row">
-              <input id="push-to-watch" type="checkbox" ${state.pushToWatch ? 'checked' : ''}>
+              <input
+                id="push-to-watch"
+                type="checkbox"
+                ${state.pushToWatch ? 'checked' : ''}
+              >
+
               <span>Push to my Garmin watch now</span>
             </label>
           </div>
-          <div id="status" class="status" hidden></div>
-          <button class="primary" id="send-garmin">Send to Garmin Connect</button>
-          <button class="secondary full" id="export-fit">Download .FIT backup</button>
-          <button class="ghost" id="reset">Reset example</button>
-          <p class="hint">Garmin Connect upload uses your existing server-side DI OAuth session. The FIT download remains available as a fallback.</p>
+
+          <div
+            id="status"
+            class="status"
+            hidden
+          ></div>
+
+          <button
+            class="primary"
+            id="send-garmin"
+          >
+            Send to Garmin Connect
+          </button>
+
+          <button
+            class="secondary full"
+            id="export-fit"
+          >
+            Download .FIT backup
+          </button>
+
+          <button
+            class="ghost"
+            id="reset"
+          >
+            Reset example
+          </button>
+
+          <p class="hint">
+            Bulk plan sync schedules future structured workouts but does not
+            push every future workout to the watch immediately. Garmin calendar
+            sync handles them on the relevant dates.
+          </p>
         </div>
       </aside>
     </main>
 
-    <footer class="shell footer">Workout editing runs in your browser. Garmin authentication tokens stay server-side and are never sent to the browser.</footer>
+    <footer class="shell footer">
+      Garmin authentication tokens stay server-side.
+      Your builder key and local plan sync history are stored only in this browser.
+    </footer>
   `;
+
   bindEvents();
 }
 
 function updateStep(id, field, value) {
-  const step = state.steps.find(s => s.id === id);
-  if (!step) return;
-  if (['durationValue','previousSteps','reps'].includes(field)) value = Number(value);
-  step[field] = value;
+  const s = state.steps.find(x => x.id === id);
+
+  if (!s) return;
+
+  if (['durationValue', 'previousSteps', 'reps'].includes(field)) {
+    value = Number(value);
+  }
+
+  s[field] = value;
+}
+
+function loadPlanWorkout(item) {
+  state.name = item.title.slice(0, 32);
+  state.sport = 'running';
+  state.steps = cloneSteps(item.steps);
+  state.scheduleDate = item.date;
+  state.pushToWatch = item.date === localDateISO();
+
+  render();
+
+  setTimeout(() => {
+    document.querySelector('.builder')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }, 0);
 }
 
 function bindEvents() {
   document.querySelector('#workout-name').addEventListener('input', e => {
     state.name = e.target.value;
-    document.querySelector('.summary-panel h2').textContent = state.name || 'Untitled workout';
+
+    document.querySelector('.summary-panel h2').textContent =
+      state.name || 'Untitled workout';
   });
 
   document.querySelector('#steps').addEventListener('change', e => {
     const card = e.target.closest('[data-id]');
     const field = e.target.dataset.field;
+
     if (!card || !field) return;
+
     updateStep(card.dataset.id, field, e.target.value);
     render();
   });
@@ -233,114 +986,244 @@ function bindEvents() {
   document.querySelector('#steps').addEventListener('input', e => {
     const card = e.target.closest('[data-id]');
     const field = e.target.dataset.field;
+
     if (!card || !field) return;
+
     updateStep(card.dataset.id, field, e.target.value);
   });
 
   document.querySelector('#steps').addEventListener('click', e => {
     const button = e.target.closest('[data-action]');
     const card = e.target.closest('[data-id]');
+
     if (!button || !card) return;
+
     const index = state.steps.findIndex(s => s.id === card.dataset.id);
-    if (button.dataset.action === 'delete') state.steps.splice(index, 1);
-    if (button.dataset.action === 'up' && index > 0) [state.steps[index - 1], state.steps[index]] = [state.steps[index], state.steps[index - 1]];
-    if (button.dataset.action === 'down' && index < state.steps.length - 1) [state.steps[index + 1], state.steps[index]] = [state.steps[index], state.steps[index + 1]];
+
+    if (button.dataset.action === 'delete') {
+      state.steps.splice(index, 1);
+    }
+
+    if (button.dataset.action === 'up' && index > 0) {
+      [state.steps[index - 1], state.steps[index]] =
+        [state.steps[index], state.steps[index - 1]];
+    }
+
+    if (
+      button.dataset.action === 'down' &&
+      index < state.steps.length - 1
+    ) {
+      [state.steps[index + 1], state.steps[index]] =
+        [state.steps[index], state.steps[index + 1]];
+    }
+
     render();
   });
 
   document.querySelector('#add-step').addEventListener('click', () => {
-    state.steps.push({ id: uid(), kind: 'step', name: 'Run', intensity: 'active', durationType: 'distance', durationValue: 1000, targetType: 'open', targetLow: '', targetHigh: '' });
+    state.steps.push(
+      step('Run', 'active', 'distance', 1000)
+    );
+
     render();
   });
 
   document.querySelector('#add-repeat').addEventListener('click', () => {
     if (!state.steps.length) return;
-    state.steps.push({ id: uid(), kind: 'repeat', name: 'Repeat', previousSteps: Math.min(2, state.steps.length), reps: 4 });
+
+    state.steps.push(
+      repeat(Math.min(2, state.steps.length), 4)
+    );
+
     render();
   });
 
   document.querySelector('#reset').addEventListener('click', () => {
     state.name = 'Great South Run Session';
-    state.steps = structuredClone(initialSteps).map(s => ({ ...s, id: uid() }));
+    state.steps = cloneSteps(initialSteps);
     state.scheduleDate = '';
     state.pushToWatch = true;
+
     render();
   });
 
-  document.querySelector('#schedule-date').addEventListener('change', e => { state.scheduleDate = e.target.value; });
-  document.querySelector('#push-to-watch').addEventListener('change', e => { state.pushToWatch = e.target.checked; });
-  document.querySelector('#send-garmin').addEventListener('click', sendToGarmin);
-  document.querySelector('#export-fit').addEventListener('click', exportFit);
+  document.querySelector('#schedule-date').addEventListener('change', e => {
+    state.scheduleDate = e.target.value;
+  });
+
+  document.querySelector('#push-to-watch').addEventListener('change', e => {
+    state.pushToWatch = e.target.checked;
+  });
+
+  document
+    .querySelector('#send-garmin')
+    .addEventListener('click', sendToGarmin);
+
+  document
+    .querySelector('#export-fit')
+    .addEventListener('click', exportFit);
+
+  document
+    .querySelector('#sync-plan')
+    .addEventListener('click', syncUpcomingPlan);
+
+  document.querySelectorAll('.plan-load').forEach(button => {
+    button.addEventListener('click', () => {
+      const item = trainingPlan.find(
+        x => x.id === button.dataset.planId
+      );
+
+      if (item) {
+        loadPlanWorkout(item);
+      }
+    });
+  });
+
+  document.querySelectorAll('.plan-sync-one').forEach(button => {
+    button.addEventListener('click', async () => {
+      const item = trainingPlan.find(
+        x => x.id === button.dataset.planId
+      );
+
+      if (item) {
+        await syncOnePlanItem(item);
+      }
+    });
+  });
 }
 
-function validateWorkout() {
+function validateWorkout(workout = state) {
   const errors = [];
-  if (!state.name.trim()) errors.push('Give the workout a name.');
-  if (!state.steps.length) errors.push('Add at least one workout step.');
 
-  state.steps.forEach((step, index) => {
-    if (step.kind === 'repeat') {
-      if (index === 0) errors.push(`Step ${index + 1}: a repeat cannot be the first step.`);
-      if (step.previousSteps < 1 || step.previousSteps > index) errors.push(`Step ${index + 1}: repeat range is invalid.`);
-      if (step.reps < 2) errors.push(`Step ${index + 1}: repeats must be at least 2.`);
+  if (!workout.name.trim()) {
+    errors.push('Give the workout a name.');
+  }
+
+  if (!workout.steps.length) {
+    errors.push('Add at least one workout step.');
+  }
+
+  workout.steps.forEach((s, index) => {
+    if (s.kind === 'repeat') {
+      if (index === 0) {
+        errors.push(
+          `Step ${index + 1}: a repeat cannot be the first step.`
+        );
+      }
+
+      if (
+        s.previousSteps < 1 ||
+        s.previousSteps > index
+      ) {
+        errors.push(
+          `Step ${index + 1}: repeat range is invalid.`
+        );
+      }
+
+      if (s.reps < 2) {
+        errors.push(
+          `Step ${index + 1}: repeats must be at least 2.`
+        );
+      }
+
       return;
     }
-    if (step.durationType !== 'open' && (!Number.isFinite(step.durationValue) || step.durationValue <= 0)) errors.push(`Step ${index + 1}: duration must be greater than zero.`);
-    if (step.targetType === 'pace') {
-      const fast = parsePace(step.targetLow);
-      const slow = parsePace(step.targetHigh);
-      if (!fast || !slow) errors.push(`Step ${index + 1}: enter pace as m:ss, for example 4:45.`);
-      if (fast && slow && fast > slow) errors.push(`Step ${index + 1}: fast pace must be quicker than slow pace.`);
+
+    if (
+      s.durationType !== 'open' &&
+      (!Number.isFinite(s.durationValue) || s.durationValue <= 0)
+    ) {
+      errors.push(
+        `Step ${index + 1}: duration must be greater than zero.`
+      );
     }
-    if (step.targetType === 'heartRate') {
-      const low = Number(step.targetLow);
-      const high = Number(step.targetHigh);
-      if (!low || !high || low > high) errors.push(`Step ${index + 1}: enter a valid heart-rate range.`);
+
+    if (s.targetType === 'pace') {
+      const fast = parsePace(s.targetLow);
+      const slow = parsePace(s.targetHigh);
+
+      if (!fast || !slow) {
+        errors.push(
+          `Step ${index + 1}: enter pace as m:ss, for example 4:45.`
+        );
+      }
+
+      if (fast && slow && fast > slow) {
+        errors.push(
+          `Step ${index + 1}: fast pace must be quicker than slow pace.`
+        );
+      }
+    }
+
+    if (s.targetType === 'heartRate') {
+      const low = Number(s.targetLow);
+      const high = Number(s.targetHigh);
+
+      if (!low || !high || low > high) {
+        errors.push(
+          `Step ${index + 1}: enter a valid heart-rate range.`
+        );
+      }
     }
   });
+
   return errors;
 }
 
-function toFitStep(step, index) {
-  if (step.kind === 'repeat') {
+function toFitStep(s, index) {
+  if (s.kind === 'repeat') {
     return {
       messageIndex: index,
       durationType: 'repeatUntilStepsCmplt',
-      // For a repeat step Garmin stores the message index to loop back to
-      // in durationValue, and the repetition count in targetValue.
-      durationValue: Math.max(0, index - step.previousSteps),
+      durationValue: Math.max(0, index - s.previousSteps),
       targetType: 'open',
-      targetValue: step.reps,
+      targetValue: s.reps,
     };
   }
 
   const mesg = {
     messageIndex: index,
-    wktStepName: step.name || `Step ${index + 1}`,
-    intensity: step.intensity,
-    durationType: step.durationType,
-    targetType: step.targetType === 'heartRate' ? 'heartRate' : step.targetType === 'pace' ? 'speed' : 'open',
+    wktStepName: s.name || `Step ${index + 1}`,
+    intensity: s.intensity,
+    durationType: s.durationType,
+    targetType:
+      s.targetType === 'heartRate'
+        ? 'heartRate'
+        : s.targetType === 'pace'
+          ? 'speed'
+          : 'open',
     targetValue: 0,
     customTargetValueLow: 0,
     customTargetValueHigh: 0,
   };
 
-  // The JS encoder serialises the underlying FIT fields, not decoded subfield
-  // aliases. FIT stores time in milliseconds and distance in centimetres.
-  if (step.durationType === 'distance') mesg.durationValue = Math.round(Number(step.durationValue) * 100);
-  if (step.durationType === 'time') mesg.durationValue = Math.round(Number(step.durationValue) * 1000);
-
-  if (step.targetType === 'pace') {
-    const fastSpeed = paceToSpeed(step.targetLow);
-    const slowSpeed = paceToSpeed(step.targetHigh);
-    mesg.customTargetValueLow = Math.round(Math.min(fastSpeed, slowSpeed) * 1000);
-    mesg.customTargetValueHigh = Math.round(Math.max(fastSpeed, slowSpeed) * 1000);
+  if (s.durationType === 'distance') {
+    mesg.durationValue =
+      Math.round(Number(s.durationValue) * 100);
   }
 
-  if (step.targetType === 'heartRate') {
-    // FIT workout_hr absolute bpm encoding is bpm + 100.
-    mesg.customTargetValueLow = Number(step.targetLow) + 100;
-    mesg.customTargetValueHigh = Number(step.targetHigh) + 100;
+  if (s.durationType === 'time') {
+    mesg.durationValue =
+      Math.round(Number(s.durationValue) * 1000);
+  }
+
+  if (s.targetType === 'pace') {
+    const fastSpeed = paceToSpeed(s.targetLow);
+    const slowSpeed = paceToSpeed(s.targetHigh);
+
+    mesg.customTargetValueLow =
+      Math.round(Math.min(fastSpeed, slowSpeed) * 1000);
+
+    mesg.customTargetValueHigh =
+      Math.round(Math.max(fastSpeed, slowSpeed) * 1000);
+  }
+
+  if (s.targetType === 'heartRate') {
+    mesg.customTargetValueLow =
+      Number(s.targetLow) + 100;
+
+    mesg.customTargetValueHigh =
+      Number(s.targetHigh) + 100;
   }
 
   return mesg;
@@ -350,90 +1233,338 @@ function createFitFile() {
   const encoder = new Encoder();
   const now = new Date();
 
-  encoder.onMesg(Profile.MesgNum.FILE_ID, {
-    type: 'workout',
-    manufacturer: 'development',
-    product: 0,
-    serialNumber: Math.floor(Math.random() * 0xffffffff),
-    timeCreated: now,
-  });
+  encoder.onMesg(
+    Profile.MesgNum.FILE_ID,
+    {
+      type: 'workout',
+      manufacturer: 'development',
+      product: 0,
+      serialNumber: Math.floor(Math.random() * 0xffffffff),
+      timeCreated: now,
+    }
+  );
 
-  encoder.onMesg(Profile.MesgNum.WORKOUT, {
-    sport: state.sport,
-    numValidSteps: state.steps.length,
-    wktName: state.name.trim().slice(0, 32),
-  });
+  encoder.onMesg(
+    Profile.MesgNum.WORKOUT,
+    {
+      sport: state.sport,
+      numValidSteps: state.steps.length,
+      wktName: state.name.trim().slice(0, 32),
+    }
+  );
 
-  state.steps.forEach((step, index) => {
-    encoder.onMesg(Profile.MesgNum.WORKOUT_STEP, toFitStep(step, index));
+  state.steps.forEach((s, index) => {
+    encoder.onMesg(
+      Profile.MesgNum.WORKOUT_STEP,
+      toFitStep(s, index)
+    );
   });
 
   return encoder.close();
 }
 
 function slugify(value) {
-  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'workout';
+  return (
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') ||
+    'workout'
+  );
 }
 
 function showStatus(message, type = 'error') {
   const el = document.querySelector('#status');
+
   el.hidden = false;
   el.className = `status ${type}`;
   el.innerHTML = message;
 }
 
-async function sendToGarmin() {
-  const errors = validateWorkout();
-  if (errors.length) {
-    showStatus(`<strong>Check the workout:</strong><br>${errors.map(escapeHtml).join('<br>')}`);
+function showPlanStatus(message, type = 'info') {
+  const el = document.querySelector('#plan-status');
+
+  el.hidden = false;
+  el.className = `status plan-status ${type}`;
+  el.innerHTML = message;
+}
+
+async function postWorkout(payload, builderKey) {
+  const response = await fetch('/api/send-to-garmin', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-builder-key': builderKey,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result =
+    await response.json().catch(() => ({}));
+
+  if (response.status === 401) {
+    localStorage.removeItem('garminBuilderKey');
+
+    throw new Error(
+      'Builder key rejected. The saved key has been cleared; try again and enter the Vercel GARMIN_BUILDER_KEY.'
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      result.error ||
+      `Garmin request failed (${response.status})`
+    );
+  }
+
+  return result;
+}
+
+function planPayload(item, pushToWatch = false) {
+  return {
+    name: item.title.slice(0, 32),
+    sport: 'running',
+    steps: item.steps.map(({ id, ...s }) => s),
+    scheduleDate: item.date,
+    pushToWatch,
+  };
+}
+
+async function syncOnePlanItem(item) {
+  if (!item.sync) return;
+
+  const syncMap = loadSyncMap();
+
+  if (syncMap[item.id]) {
+    showPlanStatus(
+      `<strong>${escapeHtml(item.title)}</strong> is already marked as synced to Garmin.`,
+      'info'
+    );
+
     return;
   }
 
-  let builderKey = localStorage.getItem('garminBuilderKey') || '';
-  if (!builderKey) {
-    builderKey = window.prompt('Enter your Garmin Workout Builder key. This is the GARMIN_BUILDER_KEY you set in Vercel.');
-    if (!builderKey) return;
-    localStorage.setItem('garminBuilderKey', builderKey);
-  }
+  const builderKey = getBuilderKey();
 
-  const button = document.querySelector('#send-garmin');
-  const original = button.textContent;
-  button.disabled = true;
-  button.textContent = 'Sending…';
-  showStatus('Sending workout securely to Garmin Connect…', 'info');
+  if (!builderKey) return;
+
+  showPlanStatus(
+    `Scheduling <strong>${escapeHtml(item.title)}</strong> for ${escapeHtml(formatDate(item.date))}…`,
+    'info'
+  );
 
   try {
-    const response = await fetch('/api/send-to-garmin', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-builder-key': builderKey,
-      },
-      body: JSON.stringify({
-        name: state.name.trim(),
-        sport: state.sport,
-        steps: state.steps.map(({ id, ...step }) => step),
-        scheduleDate: state.scheduleDate || null,
-        pushToWatch: state.pushToWatch,
-      }),
-    });
+    const result = await postWorkout(
+      planPayload(
+        item,
+        item.date === localDateISO()
+      ),
+      builderKey
+    );
 
-    const result = await response.json().catch(() => ({}));
-    if (response.status === 401) {
-      localStorage.removeItem('garminBuilderKey');
-      throw new Error('Builder key rejected. Try Send again and enter the Vercel GARMIN_BUILDER_KEY.');
-    }
-    if (!response.ok) throw new Error(result.error || `Garmin request failed (${response.status})`);
+    syncMap[item.id] = {
+      workoutId: result.workoutId,
+      workoutName: result.workoutName || item.title,
+      scheduledDate:
+        result.scheduledDate || item.date,
+    };
 
-    const parts = [`Created Garmin workout <strong>${escapeHtml(result.workoutName || state.name)}</strong>`];
-    if (result.workoutId) parts.push(`ID ${escapeHtml(result.workoutId)}`);
-    if (result.scheduledDate) parts.push(`scheduled for ${escapeHtml(result.scheduledDate)}`);
-    if (result.devicePush?.pushed) parts.push(`queued for ${escapeHtml(result.devicePush.deviceName || 'your Garmin device')}`);
-    else if (state.pushToWatch && result.devicePush?.reason) parts.push(escapeHtml(result.devicePush.reason));
-    showStatus(parts.join(' · '), 'success');
+    saveSyncMap(syncMap);
+
+    render();
+
+    setTimeout(() => {
+      showPlanStatus(
+        `<strong>${escapeHtml(item.title)}</strong> scheduled in Garmin Connect${result.workoutId ? ` · ID ${escapeHtml(result.workoutId)}` : ''}.`,
+        'success'
+      );
+    }, 0);
   } catch (error) {
     console.error(error);
-    showStatus(`Garmin Connect send failed: ${escapeHtml(error.message || error)}`);
+
+    showPlanStatus(
+      `Garmin sync failed: ${escapeHtml(error.message || error)}`,
+      'error'
+    );
+  }
+}
+
+async function syncUpcomingPlan() {
+  const builderKey = getBuilderKey();
+
+  if (!builderKey) return;
+
+  const today = localDateISO();
+  const syncMap = loadSyncMap();
+
+  const upcoming = trainingPlan.filter(
+    item =>
+      item.sync &&
+      item.date >= today &&
+      !syncMap[item.id]
+  );
+
+  if (!upcoming.length) {
+    showPlanStatus(
+      'All upcoming structured sessions in this plan are already marked as synced.',
+      'success'
+    );
+
+    return;
+  }
+
+  const button =
+    document.querySelector('#sync-plan');
+
+  const original = button.textContent;
+
+  button.disabled = true;
+
+  let completed = 0;
+  const failures = [];
+
+  try {
+    for (const item of upcoming) {
+      button.textContent =
+        `Syncing ${completed + 1}/${upcoming.length}…`;
+
+      showPlanStatus(
+        `Scheduling <strong>${escapeHtml(item.title)}</strong> for ${escapeHtml(formatDate(item.date))}…`,
+        'info'
+      );
+
+      try {
+        const result = await postWorkout(
+          planPayload(item, false),
+          builderKey
+        );
+
+        syncMap[item.id] = {
+          workoutId: result.workoutId,
+          workoutName:
+            result.workoutName || item.title,
+          scheduledDate:
+            result.scheduledDate || item.date,
+        };
+
+        saveSyncMap(syncMap);
+
+        completed += 1;
+      } catch (error) {
+        failures.push(
+          `${item.title}: ${error.message || error}`
+        );
+
+        if (
+          String(error.message || error)
+            .includes('Builder key rejected')
+        ) {
+          break;
+        }
+      }
+    }
+  } finally {
+    button.disabled = false;
+    button.textContent = original;
+  }
+
+  render();
+
+  setTimeout(() => {
+    if (failures.length) {
+      showPlanStatus(
+        `<strong>Synced ${completed} workout${completed === 1 ? '' : 's'}.</strong><br>${failures.map(escapeHtml).join('<br>')}`,
+        completed ? 'info' : 'error'
+      );
+    } else {
+      showPlanStatus(
+        `<strong>Done.</strong> Scheduled ${completed} upcoming structured workout${completed === 1 ? '' : 's'} in Garmin Connect.`,
+        'success'
+      );
+    }
+  }, 0);
+}
+
+async function sendToGarmin() {
+  const errors = validateWorkout();
+
+  if (errors.length) {
+    showStatus(
+      `<strong>Check the workout:</strong><br>${errors.map(escapeHtml).join('<br>')}`
+    );
+
+    return;
+  }
+
+  const builderKey = getBuilderKey();
+
+  if (!builderKey) return;
+
+  const button =
+    document.querySelector('#send-garmin');
+
+  const original = button.textContent;
+
+  button.disabled = true;
+  button.textContent = 'Sending…';
+
+  showStatus(
+    'Sending workout securely to Garmin Connect…',
+    'info'
+  );
+
+  try {
+    const result = await postWorkout(
+      {
+        name: state.name.trim(),
+        sport: state.sport,
+        steps: state.steps.map(({ id, ...s }) => s),
+        scheduleDate: state.scheduleDate || null,
+        pushToWatch: state.pushToWatch,
+      },
+      builderKey
+    );
+
+    const parts = [
+      `Created Garmin workout <strong>${escapeHtml(result.workoutName || state.name)}</strong>`,
+    ];
+
+    if (result.workoutId) {
+      parts.push(
+        `ID ${escapeHtml(result.workoutId)}`
+      );
+    }
+
+    if (result.scheduledDate) {
+      parts.push(
+        `scheduled for ${escapeHtml(result.scheduledDate)}`
+      );
+    }
+
+    if (result.devicePush?.pushed) {
+      parts.push(
+        `queued for ${escapeHtml(result.devicePush.deviceName || 'your Garmin device')}`
+      );
+    } else if (
+      state.pushToWatch &&
+      result.devicePush?.reason
+    ) {
+      parts.push(
+        escapeHtml(result.devicePush.reason)
+      );
+    }
+
+    showStatus(
+      parts.join(' · '),
+      'success'
+    );
+  } catch (error) {
+    console.error(error);
+
+    showStatus(
+      `Garmin Connect send failed: ${escapeHtml(error.message || error)}`
+    );
   } finally {
     button.disabled = false;
     button.textContent = original;
@@ -442,26 +1573,50 @@ async function sendToGarmin() {
 
 function exportFit() {
   const errors = validateWorkout();
+
   if (errors.length) {
-    showStatus(`<strong>Check the workout:</strong><br>${errors.map(escapeHtml).join('<br>')}`);
+    showStatus(
+      `<strong>Check the workout:</strong><br>${errors.map(escapeHtml).join('<br>')}`
+    );
+
     return;
   }
 
   try {
     const bytes = createFitFile();
-    const blob = new Blob([bytes], { type: 'application/octet-stream' });
+
+    const blob = new Blob(
+      [bytes],
+      {
+        type: 'application/octet-stream',
+      }
+    );
+
     const url = URL.createObjectURL(blob);
+
     const a = document.createElement('a');
+
     a.href = url;
-    a.download = `${slugify(state.name)}.fit`;
+    a.download =
+      `${slugify(state.name)}.fit`;
+
     document.body.appendChild(a);
+
     a.click();
     a.remove();
+
     URL.revokeObjectURL(url);
-    showStatus(`Created <strong>${escapeHtml(a.download)}</strong> with ${state.steps.length} FIT workout steps.`, 'success');
+
+    showStatus(
+      `Created <strong>${escapeHtml(a.download)}</strong> with ${state.steps.length} FIT workout steps.`,
+      'success'
+    );
   } catch (error) {
     console.error(error);
-    showStatus(`FIT export failed: ${escapeHtml(error.message || error)}`);
+
+    showStatus(
+      `FIT export failed: ${escapeHtml(error.message || error)}`
+    );
   }
 }
 
