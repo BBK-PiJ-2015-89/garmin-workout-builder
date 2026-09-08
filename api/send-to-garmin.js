@@ -184,15 +184,58 @@ export default async function handler(req, res) {
   try {
     const workout = buildWorkout(req.body);
     const client = await garminClient();
-    const created = await client.post('/workout-service/workout', workout);
-    const workoutId = created?.workoutId;
-    if (!workoutId) throw new Error('Garmin created the workout but did not return a workoutId');
+    const requestedWorkoutId = req.body?.workoutId
+      ? Number(req.body.workoutId)
+      : null;
+    
+    let workoutId;
+    let updated = false;
+    
+    if (requestedWorkoutId) {
+      if (!Number.isSafeInteger(requestedWorkoutId) || requestedWorkoutId <= 0) {
+        throw new Error('Invalid Garmin workout ID');
+      }
+    
+      workout.workoutId = requestedWorkoutId;
+    
+      await client.put(
+        `/workout-service/workout/${requestedWorkoutId}`,
+        workout
+      );
+    
+      workoutId = requestedWorkoutId;
+      updated = true;
+    } else {
+      const created = await client.post(
+        '/workout-service/workout',
+        workout
+      );
+    
+      workoutId = created?.workoutId;
+    
+      if (!workoutId) {
+        throw new Error(
+          'Garmin created the workout but did not return a workoutId'
+        );
+      }
+    }
 
     let scheduledDate = null;
+
     if (req.body?.scheduleDate) {
       const date = String(req.body.scheduleDate);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Schedule date must be YYYY-MM-DD');
-      await client.post(`/workout-service/schedule/${workoutId}`, { date });
+    
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        throw new Error('Schedule date must be YYYY-MM-DD');
+      }
+    
+      if (!updated) {
+        await client.post(
+          `/workout-service/schedule/${workoutId}`,
+          { date }
+        );
+      }
+    
       scheduledDate = date;
     }
 
@@ -206,7 +249,8 @@ export default async function handler(req, res) {
     }
 
     return json(res, 200, {
-      ok: true,
+     ok: true,
+      updated,
       workoutId,
       workoutName: workout.workoutName,
       scheduledDate,
