@@ -733,6 +733,17 @@ function planRows() {
           </button>
         `;
 
+      const deleteButton = item.custom
+        ? `
+          <button
+            class="ghost danger plan-delete-custom"
+            data-plan-id="${item.id}"
+          >
+            Delete
+          </button>
+        `
+        : "";
+
       const stravaButton = synced?.workoutId
         ? `
           <button class="ghost plan-force-strava" data-workout-id="${escapeHtml(synced.workoutId)}">
@@ -775,6 +786,7 @@ function planRows() {
             ${syncButton}
             ${stravaButton}
             ${loadButton}
+            ${deleteButton}
           </div>
         </article>
       `;
@@ -1109,6 +1121,24 @@ function loadPlanWorkout(item) {
   }, 0);
 }
 
+function deleteCustomWorkout(planId) {
+  const item = trainingPlan.find((x) => x.id === planId && x.custom);
+  if (!item) return;
+  if (!window.confirm(`Delete ${item.title} from this browser's workout list?`)) return;
+  saveCustomWorkouts(loadCustomWorkouts().filter((x) => x.id !== planId));
+  const index = trainingPlan.findIndex((x) => x.id === planId);
+  if (index >= 0) trainingPlan.splice(index, 1);
+  const syncMap = loadSyncMap();
+  delete syncMap[planId];
+  saveSyncMap(syncMap);
+  if (state.editingPlanId === planId) {
+    state.editingPlanId = null;
+    state.editingWorkoutId = null;
+  }
+  render();
+  showPlanStatus("Workout removed from this browser's list.", "success");
+}
+
 function saveCurrentWorkoutToList() {
   if (syncBusy) return;
   const errors = validateWorkout();
@@ -1278,6 +1308,10 @@ function bindEvents() {
         loadPlanWorkout(item);
       }
     });
+  });
+
+  document.querySelectorAll(".plan-delete-custom").forEach((button) => {
+    button.addEventListener("click", () => deleteCustomWorkout(button.dataset.planId));
   });
 
   document.querySelectorAll(".plan-force-strava").forEach((button) => {
