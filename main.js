@@ -310,6 +310,7 @@ const state = {
   editingPlanId: null,
   editingWorkoutId: null,
   stravaUpdates: {},
+  sharedPlans: {},
 };
 
 function escapeHtml(value = "") {
@@ -388,10 +389,31 @@ function customIds() {
   return new Set(loadCustomWorkouts().map((item) => item.id));
 }
 
+function sharedPlanItems() {
+  const localIds = new Set(trainingPlan.map((item) => item.id));
+  return Object.entries(state.sharedPlans || {})
+    .filter(([workoutId, plan]) => plan && !localIds.has(plan.planId || `shared-${workoutId}`))
+    .map(([workoutId, plan]) => ({
+      id: plan.planId || `shared-${workoutId}`,
+      date: plan.scheduledDate || localDateISO(),
+      type: "Shared",
+      title: plan.sessionTitle || plan.workoutTitle || "Shared planned workout",
+      description: plan.description || "Shared planned workout",
+      sync: true,
+      custom: true,
+      sharedOnly: true,
+      sharedWorkoutId: workoutId,
+      steps: Array.isArray(plan.steps) ? plan.steps : [],
+    }));
+}
+
 function currentPlanItems() {
   const ids = customIds();
   const hidden = loadHiddenPlanIds();
-  return [...trainingPlan.filter((item) => (!item.custom || ids.has(item.id)) && !hidden.has(item.id))];
+  return [
+    ...trainingPlan.filter((item) => (!item.custom || ids.has(item.id)) && !hidden.has(item.id)),
+    ...sharedPlanItems(),
+  ];
 }
 
 function sortedPlanItems() {
@@ -405,8 +427,10 @@ async function fetchStravaUpdates() {
     const response = await fetch("/api/plan-strava", { headers: { "x-builder-key": builderKey } });
     const data = await response.json();
     state.stravaUpdates = data.updates || {};
+    state.sharedPlans = data.plans || {};
   } catch {
     state.stravaUpdates = {};
+    state.sharedPlans = {};
   }
 }
 
@@ -714,7 +738,7 @@ function planRows() {
 
   return sortedPlanItems()
     .map((item) => {
-      const synced = syncMap[item.id];
+      const synced = syncMap[item.id] || (item.sharedWorkoutId ? { workoutId: item.sharedWorkoutId, workoutName: item.title, scheduledDate: item.date, steps: item.steps } : null);
       const past = item.date < today;
 
       let badge = item.type;
@@ -1114,7 +1138,16 @@ function updateStep(id, field, value) {
 
 function loadPlanWorkout(item) {
   const syncMap = loadSyncMap();
-  const synced = syncMap[item.id];
+  const synced =
+    syncMap[item.id] ||
+    (item.sharedWorkoutId
+      ? {
+          workoutId: item.sharedWorkoutId,
+          workoutName: item.title,
+          scheduledDate: item.date,
+          steps: item.steps,
+        }
+      : null);
 
   state.name =
     synced?.steps && synced.workoutName ? synced.workoutName : planName(item);
@@ -1136,15 +1169,25 @@ function loadPlanWorkout(item) {
   }, 0);
 }
 
-function deleteWorkoutFromList(planId) {
-  const item = trainingPlan.find((x) => x.id === planId && !x.race);
+async function deleteWorkoutFromList(planId) {
+  const item = currentPlanItems().find((x) => x.id === planId && !x.race);
   if (!item) return;
-  if (!window.confirm(`Delete ${planName(item)} from this browser's workout list?`)) return;
-  if (item.custom) {
+  if (!window.confirm(`Delete ${planName(item)} from this workout list${item.sharedWorkoutId ? " and shared Strava tracking" : ""}?`)) return;
+  if (item.sharedWorkoutId) {
+    const builderKey = getBuilderKey();
+    if (builderKey) {
+      await fetch(`/api/plan-strava?plannedWorkoutId=${encodeURIComponent(item.sharedWorkoutId)}`, {
+        method: "DELETE",
+        headers: { "x-builder-key": builderKey },
+      });
+      delete state.sharedPlans[String(item.sharedWorkoutId)];
+    }
+  }
+  if (item.custom && !item.sharedOnly) {
     saveCustomWorkouts(loadCustomWorkouts().filter((x) => x.id !== planId));
     const index = trainingPlan.findIndex((x) => x.id === planId);
     if (index >= 0) trainingPlan.splice(index, 1);
-  } else {
+  } else if (!item.sharedOnly) {
     const hidden = loadHiddenPlanIds();
     hidden.add(planId);
     saveHiddenPlanIds(hidden);
@@ -1325,7 +1368,7 @@ function bindEvents() {
 
   document.querySelectorAll(".plan-load").forEach((button) => {
     button.addEventListener("click", () => {
-      const item = trainingPlan.find((x) => x.id === button.dataset.planId);
+      const item = currentPlanItems().find((x) => x.id === button.dataset.planId);
 
       if (item) {
         loadPlanWorkout(item);
@@ -1346,7 +1389,7 @@ function bindEvents() {
 
   document.querySelectorAll(".plan-sync-one").forEach((button) => {
     button.addEventListener("click", async () => {
-      const item = trainingPlan.find((x) => x.id === button.dataset.planId);
+      const item = currentPlanItems().find((x) => x.id === button.dataset.planId);
 
       if (item) {
         await syncOnePlanItem(item);

@@ -30,8 +30,12 @@ export default async function handler(req, res) {
   if (!db) return json(res, 200, { updates: {} });
 
   if (req.method === "GET") {
-    const rows = await db.query("SELECT value FROM app_cache WHERE key = $1 LIMIT 1", ["planned_strava_updates"]);
-    return json(res, 200, { updates: rows.rows[0]?.value || {} });
+    const updateRows = await db.query("SELECT value FROM app_cache WHERE key = $1 LIMIT 1", ["planned_strava_updates"]);
+    const planRows = await db.query("SELECT value FROM app_cache WHERE key = $1 LIMIT 1", ["planned_workouts"]);
+    return json(res, 200, {
+      updates: updateRows.rows[0]?.value || {},
+      plans: planRows.rows[0]?.value?.workouts || {},
+    });
   }
 
   if (req.method === "DELETE") {
