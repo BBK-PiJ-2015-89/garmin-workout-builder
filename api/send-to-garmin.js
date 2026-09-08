@@ -141,7 +141,7 @@ async function chooseDevice(client) {
   const configured = process.env.GARMIN_DEVICE_ID;
   if (configured) return { deviceId: configured, displayName: process.env.GARMIN_DEVICE_NAME || 'configured Garmin device' };
 
-  const devices = await client.get('/device-service/deviceregistration/devices');
+  const devices = await client.connectapi('/device-service/deviceregistration/devices');
   const list = Array.isArray(devices) ? devices : [];
   const usable = list.filter(d => d && (d.deviceId || d.unitId));
   const fenix = usable.find(d => /f[ēe]nix\s*8/i.test(deviceName(d))) || usable.find(d => /f[ēe]nix/i.test(deviceName(d)));
