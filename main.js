@@ -42,20 +42,6 @@ const trainingPlan = [
     steps: [step('Club run', 'active', 'distance', 9000)],
   },
   {
-    id: 'gsr-2026-09-12-long',
-    date: '2026-09-12',
-    type: 'Structured',
-    title: 'Long easy 12 km',
-    description: 'Relaxed aerobic 12 km. Time on feet rather than pace.',
-    sync: true,
-    steps: [
-      step('Settle in', 'warmup', 'distance', 2000),
-      step('Easy aerobic', 'active', 'distance', 8000),
-      step('Easy finish', 'cooldown', 'distance', 2000),
-    ],
-  },
-
-  {
     id: 'gsr-2026-09-14-club',
     date: '2026-09-14',
     type: 'Club',
